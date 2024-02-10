@@ -1,0 +1,12 @@
+BasedOnStyle: Mozilla
+AlignAfterOpenBracket: Align
+AlignConsecutiveDeclarations: None
+AlignEscapedNewlines: Left
+AllowShortFunctionsOnASingleLine: None
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: TopLevel
+BinPackArguments: true
+BinPackParameters: false
+ColumnLimit: 95
+IndentWidth: 4
+PointerAlignment: Left
