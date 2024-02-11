@@ -41,10 +41,10 @@ get_current_user() noexcept
 void
 repl(std::ostream& out, std::istream& in) noexcept
 {
-    static const std::string_view prompt{ ">> " };
+    static const std::string_view prompt{ ">>> " };
     Lexer lexer{};
 
-    out << "Hello, " << detail::get_current_user() << "!\n"
+    out << "Hello, " << detail::get_current_user() << "! "
         << "This is the Monkey programming language!\n"
         << "Feel free to type in commands.\n";
 
