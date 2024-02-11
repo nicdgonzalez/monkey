@@ -2,6 +2,8 @@
 
 ## Introduction
 
+![build_cmake](https://img.shields.io/badge/build-CMake-blue)
+
 An interpreter for the Monkey programming language, written in C++.
 
 Based on the book [*Writing An Interpreter In Go*](https://interpreterbook.com/)
@@ -10,10 +12,6 @@ by [Thorsten Ball](https://thorstenball.com/).
 ## Quickstart
 
 How to build and run the Monkey REPL.
-
-> [!NOTE]
-> This project is still in development. Currently working on the parser, so the
-> REPL doesn't execute programs, it outputs the tokens from the Lexer.
 
 ### Using CMake
 
