@@ -27,7 +27,7 @@ Lexer::emplace(const std::string_view _new_input) noexcept
 bool
 Lexer::peek(const char _c) noexcept
 {
-    bool matched = *position_ == _c;
+    bool matched = (*position_ == _c);
 
     if (matched) {
         position_ += 1;
@@ -76,17 +76,15 @@ get_escape_sequence(char escaped) noexcept
 std::optional<Token>
 Lexer::next() noexcept
 {
-    // Skip any whitespaces before the next token.
     position_ = std::find_if_not(position_, input_.end(), ::isspace);
 
     if (position_ >= input_.end()) {
-        return std::nullopt; // We have reached the end of the file.
+        return std::nullopt;
     }
 
     const std::string_view::const_iterator start_position = position_++;
 
     switch (*start_position) {
-        /* Operators */
         case '=':
             return peek('=') ? Equal : Assign;
         case '!':
@@ -103,7 +101,6 @@ Lexer::next() noexcept
             return peek('=') ? LessEqual : LessThan;
         case '>':
             return peek('=') ? GreaterEqual : GreaterThan;
-        /* Delimiters */
         case ',':
             return Comma;
         case ';':
