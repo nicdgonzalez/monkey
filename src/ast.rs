@@ -1,5 +1,6 @@
 use crate::Token;
 
+#[derive(Debug, PartialEq)]
 pub enum Statement {
     Let(Token, Expression),
 }
@@ -12,6 +13,7 @@ impl std::fmt::Display for Statement {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum Expression {
     Identifier(Token, String),
 }
