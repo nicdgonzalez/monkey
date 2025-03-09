@@ -34,21 +34,23 @@ impl Lexer<'_> {
 
         match peek {
             'a'..='z' | 'A'..='Z' | '_' => {
-                let mut identifier = String::new();
+                let c = self.input.next().unwrap();
+                let mut identifier = String::from(c);
 
                 while self
                     .input
                     .peek()
                     .is_some_and(|c| c.is_ascii_alphanumeric() || *c == '_')
                 {
-                    let v = self.input.next().unwrap();
-                    identifier.push(v);
+                    let d = self.input.next().unwrap();
+                    identifier.push(d);
                 }
 
                 Token::from(identifier)
             }
             '0'..='9' => {
-                let mut literal = String::new();
+                let c = self.input.next().unwrap();
+                let mut literal = String::from(c);
 
                 while self.input.peek().is_some_and(|c| c.is_ascii_digit()) {
                     let d = self.input.next().unwrap();
@@ -61,15 +63,15 @@ impl Lexer<'_> {
                 let c = self.input.next().unwrap();
 
                 if let Some(&'=') = self.input.peek() {
-                    let v = self.input.next().unwrap();
-                    return (String::from(c) + &String::from(v)).into();
+                    let d = self.input.next().unwrap();
+                    return (String::from(c) + &String::from(d)).into();
                 } else {
                     Token::from(c)
                 }
             }
             _ => {
-                let v = self.input.next().unwrap();
-                Token::from(v)
+                let c = self.input.next().unwrap();
+                Token::from(c)
             }
         }
     }
@@ -82,27 +84,27 @@ mod tests {
     #[test]
     fn test_next_token() -> () {
         let input = r#"
-let five = 5;
-let ten = 10;
+            let five = 5;
+            let ten = 10;
 
-let add = fn(x, y) {
-    x + y;
-};
+            let add = fn(x, y) {
+                x + y;
+            };
 
-let result = add(five, ten);
-!-/*5;
-5 < 10 > 5;
+            let result = add(five, ten);
+            !-/*5;
+            5 < 10 > 5;
 
-if (5 < 10) {
-    return true;
-} else {
-    return false;
-}
+            if (5 < 10) {
+                return true;
+            } else {
+                return false;
+            }
 
-10 == 10;
-10 != 9;
-"#;
-        let expected: Vec<Token> = vec![
+            10 == 10;
+            10 != 9;
+        "#;
+        let expected_tokens: &[Token] = &[
             Token::Let,
             Token::Identifier("five".to_string()),
             Token::Assign,
@@ -181,12 +183,8 @@ if (5 < 10) {
 
         let mut lexer = Lexer::new(&input);
 
-        for (i, test) in expected.iter().enumerate() {
-            let token = lexer.next_token();
-
-            if token != *test {
-                panic!("test[{i}]: expected {}, got {:?}", test, token);
-            }
+        for expected_token in expected_tokens.iter() {
+            assert_eq!(lexer.next_token(), *expected_token);
         }
     }
 }
