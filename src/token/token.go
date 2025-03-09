@@ -25,6 +25,8 @@ const (
 
 	LT = "<"
 	GT = ">"
+	EQ = "=="
+	NE = "!="
 
 	// Delimiters
 	COMMA     = ","
