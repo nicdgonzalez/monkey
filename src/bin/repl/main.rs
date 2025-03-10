@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use monkey::Token;
+use monkey::token::TokenKind;
 
 fn main() {
     let mut buffer = String::new();
@@ -21,10 +21,10 @@ fn main() {
             .read_line(&mut buffer)
             .expect("failed to read from stdin");
 
-        let mut lexer = monkey::Lexer::new(&buffer);
+        let mut lexer = monkey::lexer::Lexer::new(&buffer);
         let mut token = lexer.next_token();
 
-        while token != Token::EndOfFile {
+        while token.kind != TokenKind::EndOfFile {
             println!("{:?}", token);
             token = lexer.next_token();
         }

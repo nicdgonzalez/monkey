@@ -1,11 +1,11 @@
-#[derive(Debug, Clone, PartialEq)]
-pub enum Token {
-    Illegal(String),
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum TokenKind {
+    Illegal,
     EndOfFile,
 
     // Identifiers and literals
-    Identifier(String),
-    Integer(String),
+    Identifier,
+    Integer,
 
     // Operators
     Assign,
@@ -41,86 +41,108 @@ pub enum Token {
     Return,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Token {
+    pub kind: TokenKind,
+    pub literal: String,
+}
+
 impl From<char> for Token {
     fn from(value: char) -> Self {
-        match value {
-            '=' => Self::Assign,
-            '+' => Self::Plus,
-            '-' => Self::Minus,
-            '!' => Self::Bang,
-            '*' => Self::Asterisk,
-            '/' => Self::Slash,
-            '<' => Self::LessThan,
-            '>' => Self::GreaterThan,
-            ',' => Self::Comma,
-            ';' => Self::Semicolon,
-            '(' => Self::LParenthesis,
-            ')' => Self::RParenthesis,
-            '{' => Self::LBrace,
-            '}' => Self::RBrace,
-            '\0' => Self::EndOfFile,
-            _ => Self::Illegal(value.to_string()),
+        let kind = match value {
+            '=' => TokenKind::Assign,
+            '+' => TokenKind::Plus,
+            '-' => TokenKind::Minus,
+            '!' => TokenKind::Bang,
+            '*' => TokenKind::Asterisk,
+            '/' => TokenKind::Slash,
+            '<' => TokenKind::LessThan,
+            '>' => TokenKind::GreaterThan,
+            ',' => TokenKind::Comma,
+            ';' => TokenKind::Semicolon,
+            '(' => TokenKind::LParenthesis,
+            ')' => TokenKind::RParenthesis,
+            '{' => TokenKind::LBrace,
+            '}' => TokenKind::RBrace,
+            '\0' => TokenKind::EndOfFile,
+            _ => TokenKind::Illegal,
+        };
+
+        Self {
+            kind,
+            literal: value.to_string(),
         }
     }
 }
 
-impl From<String> for Token {
-    fn from(value: String) -> Self {
-        match value.as_str() {
-            "==" => Self::Equal,
-            "!=" => Self::NotEqual,
-            "<=" => Self::LessOrEqual,
-            ">=" => Self::GreaterOrEqual,
-            "fn" => Self::Function,
-            "let" => Self::Let,
-            "true" => Self::True,
-            "false" => Self::False,
-            "if" => Self::If,
-            "else" => Self::Else,
-            "return" => Self::Return,
+impl From<&str> for Token {
+    fn from(value: &str) -> Self {
+        let kind = match value {
+            "==" => TokenKind::Equal,
+            "!=" => TokenKind::NotEqual,
+            "<=" => TokenKind::LessOrEqual,
+            ">=" => TokenKind::GreaterOrEqual,
+            "fn" => TokenKind::Function,
+            "let" => TokenKind::Let,
+            "true" => TokenKind::True,
+            "false" => TokenKind::False,
+            "if" => TokenKind::If,
+            "else" => TokenKind::Else,
+            "return" => TokenKind::Return,
             _ => {
                 if value.chars().all(|c| c.is_ascii_digit()) {
-                    Self::Integer(value)
+                    TokenKind::Integer
                 } else {
-                    Self::Identifier(value)
+                    TokenKind::Identifier
                 }
             }
+        };
+
+        Self {
+            kind,
+            literal: value.to_string(),
         }
     }
 }
 
 impl std::fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.literal)
+    }
+}
+
+impl std::fmt::Display for TokenKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Illegal(c) => write!(f, "Illegal: {c}"),
-            Self::EndOfFile => write!(f, "EOF"),
-            Self::Identifier(identifier) => write!(f, "{identifier}"),
-            Self::Integer(literal) => write!(f, "{literal}"),
-            Self::Assign => write!(f, "="),
-            Self::Plus => write!(f, "+"),
-            Self::Minus => write!(f, "-"),
-            Self::Bang => write!(f, "!"),
-            Self::Asterisk => write!(f, "*"),
-            Self::Slash => write!(f, "/"),
-            Self::LessThan => write!(f, "<"),
-            Self::GreaterThan => write!(f, ">"),
-            Self::Equal => write!(f, "=="),
-            Self::NotEqual => write!(f, "!="),
-            Self::LessOrEqual => write!(f, "<="),
-            Self::GreaterOrEqual => write!(f, ">="),
-            Self::Comma => write!(f, ","),
-            Self::Semicolon => write!(f, ";"),
-            Self::LParenthesis => write!(f, "("),
-            Self::RParenthesis => write!(f, ")"),
-            Self::LBrace => write!(f, "{{"),
-            Self::RBrace => write!(f, "}}"),
-            Self::Function => write!(f, "fn"),
-            Self::Let => write!(f, "let"),
-            Self::True => write!(f, "true"),
-            Self::False => write!(f, "false"),
-            Self::If => write!(f, "if"),
-            Self::Else => write!(f, "else"),
-            Self::Return => write!(f, "return"),
+            TokenKind::Illegal => write!(f, "ILLEGAL"),
+            TokenKind::EndOfFile => write!(f, "EOF"),
+            TokenKind::Identifier => write!(f, "IDENTIFIER"),
+            TokenKind::Integer => write!(f, "INTEGER"),
+            TokenKind::Assign => write!(f, "="),
+            TokenKind::Plus => write!(f, "+"),
+            TokenKind::Minus => write!(f, "-"),
+            TokenKind::Bang => write!(f, "!"),
+            TokenKind::Asterisk => write!(f, "*"),
+            TokenKind::Slash => write!(f, "/"),
+            TokenKind::LessThan => write!(f, "<"),
+            TokenKind::GreaterThan => write!(f, ">"),
+            TokenKind::Equal => write!(f, "=="),
+            TokenKind::NotEqual => write!(f, "!="),
+            TokenKind::LessOrEqual => write!(f, "<="),
+            TokenKind::GreaterOrEqual => write!(f, ">="),
+            TokenKind::Comma => write!(f, ","),
+            TokenKind::Semicolon => write!(f, ";"),
+            TokenKind::LParenthesis => write!(f, "("),
+            TokenKind::RParenthesis => write!(f, ")"),
+            TokenKind::LBrace => write!(f, "{{"),
+            TokenKind::RBrace => write!(f, "}}"),
+            TokenKind::Function => write!(f, "fn"),
+            TokenKind::Let => write!(f, "let"),
+            TokenKind::True => write!(f, "true"),
+            TokenKind::False => write!(f, "false"),
+            TokenKind::If => write!(f, "if"),
+            TokenKind::Else => write!(f, "else"),
+            TokenKind::Return => write!(f, "return"),
         }
     }
 }

@@ -29,7 +29,7 @@ impl Lexer<'_> {
 
         let peek = match self.input.peek() {
             Some(&c) => c,
-            None => return Token::EndOfFile,
+            None => return Token::from('\0'),
         };
 
         match peek {
@@ -46,7 +46,7 @@ impl Lexer<'_> {
                     identifier.push(d);
                 }
 
-                Token::from(identifier)
+                Token::from(identifier.as_ref())
             }
             '0'..='9' => {
                 let c = self.input.next().unwrap();
@@ -57,14 +57,15 @@ impl Lexer<'_> {
                     literal.push(d);
                 }
 
-                Token::from(literal)
+                Token::from(literal.as_ref())
             }
             '=' | '!' | '<' | '>' => {
                 let c = self.input.next().unwrap();
 
                 if let Some(&'=') = self.input.peek() {
                     let d = self.input.next().unwrap();
-                    return (String::from(c) + &String::from(d)).into();
+                    let s = String::from(c) + &String::from(d);
+                    return Token::from(s.as_ref());
                 } else {
                     Token::from(c)
                 }
@@ -104,81 +105,82 @@ mod tests {
             10 == 10;
             10 != 9;
         "#;
+
         let expected_tokens: &[Token] = &[
-            Token::Let,
-            Token::Identifier("five".to_string()),
-            Token::Assign,
-            Token::Integer("5".to_string()),
-            Token::Semicolon,
-            Token::Let,
-            Token::Identifier("ten".to_string()),
-            Token::Assign,
-            Token::Integer("10".to_string()),
-            Token::Semicolon,
-            Token::Let,
-            Token::Identifier("add".to_string()),
-            Token::Assign,
-            Token::Function,
-            Token::LParenthesis,
-            Token::Identifier("x".to_string()),
-            Token::Comma,
-            Token::Identifier("y".to_string()),
-            Token::RParenthesis,
-            Token::LBrace,
-            Token::Identifier("x".to_string()),
-            Token::Plus,
-            Token::Identifier("y".to_string()),
-            Token::Semicolon,
-            Token::RBrace,
-            Token::Semicolon,
-            Token::Let,
-            Token::Identifier("result".to_string()),
-            Token::Assign,
-            Token::Identifier("add".to_string()),
-            Token::LParenthesis,
-            Token::Identifier("five".to_string()),
-            Token::Comma,
-            Token::Identifier("ten".to_string()),
-            Token::RParenthesis,
-            Token::Semicolon,
-            Token::Bang,
-            Token::Minus,
-            Token::Slash,
-            Token::Asterisk,
-            Token::Integer("5".to_string()),
-            Token::Semicolon,
-            Token::Integer("5".to_string()),
-            Token::LessThan,
-            Token::Integer("10".to_string()),
-            Token::GreaterThan,
-            Token::Integer("5".to_string()),
-            Token::Semicolon,
-            Token::If,
-            Token::LParenthesis,
-            Token::Integer("5".to_string()),
-            Token::LessThan,
-            Token::Integer("10".to_string()),
-            Token::RParenthesis,
-            Token::LBrace,
-            Token::Return,
-            Token::True,
-            Token::Semicolon,
-            Token::RBrace,
-            Token::Else,
-            Token::LBrace,
-            Token::Return,
-            Token::False,
-            Token::Semicolon,
-            Token::RBrace,
-            Token::Integer("10".to_string()),
-            Token::Equal,
-            Token::Integer("10".to_string()),
-            Token::Semicolon,
-            Token::Integer("10".to_string()),
-            Token::NotEqual,
-            Token::Integer("9".to_string()),
-            Token::Semicolon,
-            Token::EndOfFile,
+            Token::from("let"),
+            Token::from("five"),
+            Token::from('='),
+            Token::from("5"),
+            Token::from(';'),
+            Token::from("let"),
+            Token::from("ten"),
+            Token::from('='),
+            Token::from("10"),
+            Token::from(';'),
+            Token::from("let"),
+            Token::from("add"),
+            Token::from('='),
+            Token::from("fn"),
+            Token::from('('),
+            Token::from("x"),
+            Token::from(','),
+            Token::from("y"),
+            Token::from(')'),
+            Token::from('{'),
+            Token::from("x"),
+            Token::from('+'),
+            Token::from("y"),
+            Token::from(';'),
+            Token::from('}'),
+            Token::from(';'),
+            Token::from("let"),
+            Token::from("result"),
+            Token::from('='),
+            Token::from("add"),
+            Token::from('('),
+            Token::from("five"),
+            Token::from(','),
+            Token::from("ten"),
+            Token::from(')'),
+            Token::from(';'),
+            Token::from('!'),
+            Token::from('-'),
+            Token::from('/'),
+            Token::from('*'),
+            Token::from("5"),
+            Token::from(';'),
+            Token::from("5"),
+            Token::from('<'),
+            Token::from("10"),
+            Token::from('>'),
+            Token::from("5"),
+            Token::from(';'),
+            Token::from("if"),
+            Token::from('('),
+            Token::from("5"),
+            Token::from('<'),
+            Token::from("10"),
+            Token::from(')'),
+            Token::from('{'),
+            Token::from("return"),
+            Token::from("true"),
+            Token::from(';'),
+            Token::from('}'),
+            Token::from("else"),
+            Token::from('{'),
+            Token::from("return"),
+            Token::from("false"),
+            Token::from(';'),
+            Token::from('}'),
+            Token::from("10"),
+            Token::from("=="),
+            Token::from("10"),
+            Token::from(';'),
+            Token::from("10"),
+            Token::from("!="),
+            Token::from("9"),
+            Token::from(';'),
+            Token::from('\0'),
         ];
 
         let mut lexer = Lexer::new(&input);

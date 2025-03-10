@@ -1,27 +1,37 @@
-use crate::Token;
+use std::rc::Rc;
+
+use crate::token::Token;
 
 #[derive(Debug, PartialEq)]
 pub enum Statement {
-    Let(Token, Expression),
+    Let(Token, Expression, Expression),
+    Return(Token, Expression),
+    Expression(Token, Expression),
 }
 
 impl std::fmt::Display for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Let(token, ..) => write!(f, "{}", token),
+            Self::Return(token, ..) => write!(f, "{}", token),
+            Self::Expression(token, ..) => write!(f, "{}", token),
         }
     }
 }
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {
-    Identifier(Token, String),
+    Identifier(Token),
+    IntegerLiteral(Token, i64),
+    Prefix(Token, String, Rc<Expression>),
 }
 
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Identifier(token, ..) => write!(f, "{}", token),
+            Self::IntegerLiteral(token, ..) => write!(f, "{}", token),
+            Self::Prefix(token, ..) => write!(f, "{}", token),
         }
     }
 }
