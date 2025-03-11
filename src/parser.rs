@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::rc::Rc;
 
 use lazy_static::lazy_static;
 
@@ -31,6 +30,7 @@ lazy_static! {
         (TokenKind::Minus, Precedence::Sum),
         (TokenKind::Slash, Precedence::Product),
         (TokenKind::Asterisk, Precedence::Product),
+        (TokenKind::LParenthesis, Precedence::Call),
     ]);
 }
 
@@ -94,6 +94,8 @@ impl<'a> Parser<'a> {
         parser.register_prefix_fn(TokenKind::True, Parser::parse_boolean);
         parser.register_prefix_fn(TokenKind::False, Parser::parse_boolean);
         parser.register_prefix_fn(TokenKind::LParenthesis, Parser::parse_grouped_expression);
+        parser.register_prefix_fn(TokenKind::If, Parser::parse_if_expression);
+        parser.register_prefix_fn(TokenKind::Function, Parser::parse_function_literal);
 
         // Registering infix parsing functions.
         parser.register_infix_fn(TokenKind::Plus, Parser::parse_infix_expression);
@@ -104,6 +106,7 @@ impl<'a> Parser<'a> {
         parser.register_infix_fn(TokenKind::NotEqual, Parser::parse_infix_expression);
         parser.register_infix_fn(TokenKind::LessThan, Parser::parse_infix_expression);
         parser.register_infix_fn(TokenKind::GreaterThan, Parser::parse_infix_expression);
+        parser.register_infix_fn(TokenKind::LParenthesis, Parser::parse_call_expression);
 
         parser
     }
@@ -137,9 +140,7 @@ impl<'a> Parser<'a> {
             self.advance_current_token();
         }
 
-        // Debugging:
-        println!("statements: {:#?}", program.statements);
-        println!("errors: {:#?}", program.errors);
+        println!("AST (Abstract Syntax Tree): {:#?}", program.statements);
 
         program
     }
@@ -182,13 +183,6 @@ impl<'a> Parser<'a> {
         let value = self.parse_expression(Precedence::Lowest)?;
         self.advance_current_token();
 
-        // TODO: Annoying bug; be clearer about whose responsibility it is to
-        // advance the lexer. I would prefer if the parser function handles it.
-        // For now, I'm trusting the book has a reason for doing it this way.
-        // if self.current.kind == TokenKind::Semicolon {
-        //     self.advance_current_token();
-        // }
-
         let statement = Statement::Let(token, name, value);
         Ok(statement)
     }
@@ -209,10 +203,8 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expression_statement(&mut self) -> Result<Statement, ParserError> {
-        println!("Parse expression token: {}", self.current);
         let token = self.current.clone();
         let expression = self.parse_expression(Precedence::Lowest)?;
-        println!("Parse expression: {}", expression);
 
         if self.next.kind == TokenKind::Semicolon {
             self.advance_current_token();
@@ -228,7 +220,6 @@ impl<'a> Parser<'a> {
             Some(f) => f(self)?,
             None => return Err(ParserError::MissingPrefixFn(self.current.kind.clone())),
         };
-        println!("expression left: {:#?}", left);
 
         while self.next.kind != TokenKind::Semicolon && self.next.kind != TokenKind::EndOfFile {
             let peek_precedence = match PRECEDENCES.get(&self.next.kind) {
@@ -236,12 +227,6 @@ impl<'a> Parser<'a> {
                 None => &Precedence::Lowest,
             };
 
-            println!(
-                "{:?} >= {:?}: {}",
-                precedence,
-                *peek_precedence,
-                precedence >= *peek_precedence
-            );
             if precedence >= *peek_precedence {
                 break;
             }
@@ -249,7 +234,6 @@ impl<'a> Parser<'a> {
             if let Some(&infix) = self.infix.get(&self.next.kind) {
                 self.advance_current_token();
                 left = infix(self, left)?;
-                println!("new left: {:#}", left);
             } else {
                 return Ok(left);
             }
@@ -265,7 +249,7 @@ impl<'a> Parser<'a> {
 
         let right = self.parse_expression(Precedence::Prefix)?;
 
-        let expression = Expression::Prefix(token, Rc::new(right));
+        let expression = Expression::Prefix(token, Box::new(right));
         Ok(expression)
     }
 
@@ -274,15 +258,11 @@ impl<'a> Parser<'a> {
         let precedence = PRECEDENCES
             .get(&self.current.kind)
             .ok_or_else(|| ParserError::MissingInfixFn(token.kind.clone()))?;
-        println!("infix precedence: {:?}", precedence);
         self.advance_current_token();
 
         let right = self.parse_expression(precedence.clone())?;
-        println!("infix left expression: {:#?}", left);
-        println!("infix right expression: {:#?}", right);
 
-        let expression = Expression::Infix(token, Rc::new(left), Rc::new(right));
-        println!("infix Expression: {}", expression);
+        let expression = Expression::Infix(token, Box::new(left), Box::new(right));
         Ok(expression)
     }
 
@@ -321,7 +301,7 @@ impl<'a> Parser<'a> {
         if self.next.kind != TokenKind::RParenthesis {
             return Err(ParserError::WrongToken(
                 TokenKind::RParenthesis,
-                self.current.kind.clone(),
+                self.next.kind.clone(),
             ));
         }
 
@@ -329,6 +309,201 @@ impl<'a> Parser<'a> {
         self.advance_current_token();
 
         Ok(expression)
+    }
+
+    fn parse_if_expression(&mut self) -> Result<Expression, ParserError> {
+        assert_eq!(self.current.kind, TokenKind::If);
+        let token = self.current.clone();
+
+        // Check if the next token is an opening parenthesis.
+        if self.next.kind == TokenKind::LParenthesis {
+            self.advance_current_token();
+        } else {
+            return Err(ParserError::WrongToken(
+                TokenKind::LParenthesis,
+                self.next.kind.clone(),
+            ));
+        }
+
+        // Parse the condition.
+        let condition = self.parse_expression(Precedence::Lowest)?;
+
+        if self.current.kind == TokenKind::RParenthesis {
+            self.advance_current_token();
+        } else {
+            return Err(ParserError::WrongToken(
+                TokenKind::RParenthesis,
+                self.current.kind.clone(),
+            ));
+        }
+
+        // Parse the consequence block.
+        let consequence = self.parse_block_statement()?;
+
+        // Parse the else block.
+        let alternative = if self.next.kind == TokenKind::Else {
+            self.advance_current_token();
+
+            if self.next.kind == TokenKind::LBrace {
+                self.advance_current_token();
+            } else {
+                return Err(ParserError::WrongToken(
+                    TokenKind::LBrace,
+                    self.next.kind.clone(),
+                ));
+            }
+
+            let alternative = self.parse_block_statement()?;
+            Some(alternative)
+        } else {
+            None
+        };
+
+        let expression = Expression::If(
+            token,
+            Box::new(condition),
+            Box::new(consequence),
+            Box::new(alternative),
+        );
+        Ok(expression)
+    }
+
+    fn parse_block_statement(&mut self) -> Result<Statement, ParserError> {
+        assert_eq!(self.current.kind, TokenKind::LBrace);
+        let token = self.current.clone();
+        let mut statements = Vec::<Box<Statement>>::new();
+        self.advance_current_token();
+
+        // Loop over tokens until we reach the closing brace.
+        while self.current.kind != TokenKind::RBrace && self.current.kind != TokenKind::EndOfFile {
+            let result = self.parse_statement();
+
+            match result {
+                Ok(statement) => statements.push(Box::new(statement)),
+                Err(_err) => (), // TODO: Book does not handle errors here.
+            }
+
+            self.advance_current_token();
+        }
+
+        let block = Statement::Block(token, statements);
+        Ok(block)
+    }
+
+    fn parse_function_literal(&mut self) -> Result<Expression, ParserError> {
+        assert_eq!(self.current.kind, TokenKind::Function);
+        let token = self.current.clone();
+
+        if self.next.kind == TokenKind::LParenthesis {
+            self.advance_current_token();
+        } else {
+            return Err(ParserError::WrongToken(
+                TokenKind::LParenthesis,
+                self.next.kind.clone(),
+            ));
+        }
+
+        // Start parsing the parameters from the opening parenthesis.
+        let parameters = self.parse_function_parameters()?;
+
+        if self.next.kind == TokenKind::LBrace {
+            self.advance_current_token();
+        } else {
+            return Err(ParserError::WrongToken(
+                TokenKind::LBrace,
+                self.next.kind.clone(),
+            ));
+        }
+
+        let body = self.parse_block_statement()?;
+
+        let expression = Expression::FunctionLiteral(token, parameters, Box::new(body));
+        Ok(expression)
+    }
+
+    fn parse_function_parameters(&mut self) -> Result<Vec<Box<Expression>>, ParserError> {
+        let mut parameters = Vec::<Box<Expression>>::new();
+
+        if self.next.kind == TokenKind::RParenthesis {
+            // Advance to RParenthesis.
+            self.advance_current_token();
+            return Ok(parameters);
+        }
+
+        // Advance past the opening parenthesis.
+        self.advance_current_token();
+
+        // Get the first parameter.
+        let mut parameter = Expression::Identifier(self.current.clone());
+        parameters.push(Box::new(parameter));
+
+        // Iterate over the remaining parameters.
+        while self.current.kind != TokenKind::EndOfFile {
+            if self.next.kind != TokenKind::Comma {
+                break;
+            }
+
+            // Advance to the comma.
+            self.advance_current_token();
+            // Advance to next parameter.
+            self.advance_current_token();
+
+            parameter = Expression::Identifier(self.current.clone());
+            parameters.push(Box::new(parameter));
+        }
+
+        if self.next.kind != TokenKind::RParenthesis {
+            return Err(ParserError::WrongToken(
+                TokenKind::RParenthesis,
+                self.next.kind.clone(),
+            ));
+        }
+
+        self.advance_current_token();
+        Ok(parameters)
+    }
+
+    fn parse_call_expression(&mut self, function: Expression) -> Result<Expression, ParserError> {
+        let token = self.current.clone();
+        let arguments = self.parse_call_arguments()?;
+        let expression = Expression::Call(token, Box::new(function), arguments);
+        Ok(expression)
+    }
+
+    fn parse_call_arguments(&mut self) -> Result<Vec<Box<Expression>>, ParserError> {
+        let mut arguments = Vec::<Box<Expression>>::new();
+        self.advance_current_token();
+
+        if self.current.kind == TokenKind::RParenthesis {
+            return Ok(arguments);
+        }
+
+        let mut argument = self.parse_expression(Precedence::Lowest)?;
+        arguments.push(Box::new(argument));
+
+        while self.current.kind != TokenKind::EndOfFile {
+            if self.next.kind != TokenKind::Comma {
+                break;
+            }
+
+            // Advance to the comma.
+            self.advance_current_token();
+            // Advance to next parameter.
+            self.advance_current_token();
+
+            argument = self.parse_expression(Precedence::Lowest)?;
+            arguments.push(Box::new(argument));
+        }
+
+        if self.next.kind != TokenKind::RParenthesis {
+            return Err(ParserError::WrongToken(
+                TokenKind::RParenthesis,
+                self.next.kind.clone(),
+            ));
+        }
+
+        self.advance_current_token();
+        Ok(arguments)
     }
 }
 

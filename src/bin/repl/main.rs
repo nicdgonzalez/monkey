@@ -23,8 +23,11 @@ fn main() {
         let mut parser = monkey::parser::Parser::new(&mut lexer);
         let program = parser.parse_program();
 
-        for error in program.errors.iter() {
-            eprintln!("\t{}", error);
+        if program.errors.len() > 0 {
+            eprintln!("errors:");
+            for error in program.errors.iter() {
+                eprintln!("  {}", error);
+            }
         }
 
         println!("{}", program);
