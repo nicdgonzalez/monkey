@@ -8,3 +8,4 @@ name = "monkey"
 path = "./src/bin/repl/main.rs"
 
 [dependencies]
+lazy_static = "1.5.0"

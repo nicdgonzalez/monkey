@@ -1,7 +1,5 @@
 use std::io::Write;
 
-use monkey::token::TokenKind;
-
 fn main() {
     let mut buffer = String::new();
 
@@ -22,13 +20,14 @@ fn main() {
             .expect("failed to read from stdin");
 
         let mut lexer = monkey::lexer::Lexer::new(&buffer);
-        let mut token = lexer.next_token();
+        let mut parser = monkey::parser::Parser::new(&mut lexer);
+        let program = parser.parse_program();
 
-        while token.kind != TokenKind::EndOfFile {
-            println!("{:?}", token);
-            token = lexer.next_token();
+        for error in program.errors.iter() {
+            eprintln!("\t{}", error);
         }
 
+        println!("{}", program);
         buffer.clear();
     }
 }
