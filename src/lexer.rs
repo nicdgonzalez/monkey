@@ -16,7 +16,7 @@ impl<'a> Lexer<'a> {
 }
 
 impl Lexer<'_> {
-    pub fn next_token(&mut self) -> Token {
+    pub fn get_next_token(&mut self) -> Token {
         // Skip over whitespaces.
         while self
             .input
@@ -186,7 +186,7 @@ mod tests {
         let mut lexer = Lexer::new(&input);
 
         for expected_token in expected_tokens.iter() {
-            assert_eq!(lexer.next_token(), *expected_token);
+            assert_eq!(lexer.get_next_token(), *expected_token);
         }
     }
 }

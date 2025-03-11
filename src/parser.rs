@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use lazy_static::lazy_static;
 
-use crate::ast::{Expression, Program, Statement};
+use crate::_ast::{Expression, Program, Statement};
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenKind};
 
@@ -75,8 +75,8 @@ impl std::fmt::Display for ParserError {
 impl<'a> Parser<'a> {
     pub fn new(lexer: &'a mut Lexer<'a>) -> Self {
         // Start the parser in a working state.
-        let current = lexer.next_token();
-        let next = lexer.next_token();
+        let current = lexer.get_next_token();
+        let next = lexer.get_next_token();
 
         let mut parser = Self {
             lexer,
@@ -125,7 +125,7 @@ impl<'a> Parser<'a> {
 
     fn advance_current_token(&mut self) {
         self.current = self.next.to_owned();
-        self.next = self.lexer.next_token();
+        self.next = self.lexer.get_next_token();
     }
 
     pub fn parse_program(&mut self) -> Program {
@@ -266,6 +266,7 @@ impl<'a> Parser<'a> {
         Ok(expression)
     }
 
+    // X
     fn parse_identifier(&mut self) -> Result<Expression, ParserError> {
         let token = self.current.clone();
         if let TokenKind::Identifier = token.kind {
@@ -276,6 +277,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    // X
     fn parse_integer_literal(&mut self) -> Result<Expression, ParserError> {
         let token = self.current.clone();
         if let TokenKind::Integer = token.kind {
@@ -287,6 +289,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    // X
     fn parse_boolean(&mut self) -> Result<Expression, ParserError> {
         assert!(self.current.kind == TokenKind::True || self.current.kind == TokenKind::False);
         let value = self.current.kind == TokenKind::True;
@@ -509,7 +512,7 @@ impl<'a> Parser<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::{Expression, Statement};
+    use crate::_ast::{Expression, Statement};
 
     use super::*;
 

@@ -1,8 +1,6 @@
 use crate::token::Token;
 
-pub trait Node {
-    // fn get_token(&self) -> Token;
-}
+pub trait Node {}
 
 #[derive(Debug, PartialEq)]
 pub enum Statement {

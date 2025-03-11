@@ -1,3 +1,4 @@
+mod _ast;
 pub mod ast;
 pub mod evaluator;
 pub mod lexer;

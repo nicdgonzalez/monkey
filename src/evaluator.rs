@@ -1,5 +1,5 @@
 use crate::{ast::Node, object::Object};
 
-pub fn eval<T: Object>(node: impl Node) -> Option<T> {
+pub fn eval<T: Object>(_node: Node) -> Option<T> {
     todo!()
 }
