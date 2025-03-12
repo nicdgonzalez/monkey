@@ -1,7 +1,6 @@
-mod _ast;
 pub mod ast;
-pub mod evaluator;
+pub mod expression;
 pub mod lexer;
-pub mod object;
 pub mod parser;
+pub mod statement;
 pub mod token;

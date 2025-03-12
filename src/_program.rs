@@ -1,8 +1,9 @@
+use crate::parser::parse_statement;
 use crate::token::TokenKind;
 
-use super::parser::{Parse, Parser, ParserError};
-use super::statement;
-use super::Node;
+use crate::ast::Node;
+use crate::parser::{Parse, ParserContext, ParserError};
+use crate::statement;
 
 pub struct Program {
     pub statements: Vec<statement::Statement>,
@@ -27,18 +28,12 @@ impl From<Node> for Program {
     }
 }
 
-impl Parse<'_> for Program {
-    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
+impl Parse for Program {
+    fn parse(parser: &mut ParserContext<'_>) -> Result<Node, ParserError> {
         let mut program = Self::new();
 
         while parser.token.kind != TokenKind::EndOfFile {
-            let result = match parser.token.kind {
-                TokenKind::Let => statement::Let::parse(parser),
-                TokenKind::Return => statement::Return::parse(parser),
-                _ => statement::Expression::parse(parser),
-            };
-
-            match result {
+            match parse_statement(parser) {
                 Ok(statement) => program.statements.push(statement.into()),
                 Err(err) => program.errors.push(err.to_string()),
             }
@@ -49,5 +44,17 @@ impl Parse<'_> for Program {
         eprintln!("AST (Abstract Syntax Tree): {:#?}", program.statements);
 
         Ok(program.into())
+    }
+}
+
+impl std::fmt::Display for Program {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let statement = if self.statements.len() > 0 {
+            self.statements.iter().nth(0).unwrap().to_string()
+        } else {
+            "".to_string()
+        };
+
+        write!(f, "{}", statement)
     }
 }
