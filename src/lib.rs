@@ -1,6 +1,12 @@
-pub mod ast;
-pub mod expression;
-pub mod lexer;
-pub mod parser;
-pub mod statement;
-pub mod token;
+mod ast;
+pub mod evaluator;
+mod expression;
+mod lexer;
+mod object;
+mod parser;
+mod statement;
+mod token;
+
+pub use ast::Program;
+pub use lexer::Lexer;
+pub use parser::{Parse, Parser};

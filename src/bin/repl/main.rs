@@ -1,7 +1,7 @@
 use std::io::Write;
 
-use monkey::ast::Program;
-use monkey::parser::{Parse, ParserContext};
+use monkey::{evaluator, Lexer, Program};
+use monkey::{Parse, Parser};
 
 fn main() {
     let mut buffer = String::new();
@@ -22,8 +22,8 @@ fn main() {
             .read_line(&mut buffer)
             .expect("failed to read from stdin");
 
-        let mut lexer = monkey::lexer::Lexer::new(&buffer);
-        let mut parser = ParserContext::new(&mut lexer);
+        let mut lexer = Lexer::new(&buffer);
+        let mut parser = Parser::new(&mut lexer);
         let program: Program = Program::parse(&mut parser)
             .expect("failed to parse program")
             .into();
@@ -35,7 +35,9 @@ fn main() {
             }
         }
 
-        println!("{}", program);
+        let value = evaluator::eval(program.into());
+        println!("{}", value);
+
         buffer.clear();
     }
 }

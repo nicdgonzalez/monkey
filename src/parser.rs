@@ -9,27 +9,25 @@ use crate::statement;
 use crate::token::{Token, TokenKind};
 
 pub trait Parse {
-    fn parse(parser: &mut ParserContext<'_>) -> Result<Node, ParserError>;
+    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError>;
 }
 
 pub trait ParsePrefix {
-    fn parse_prefix(parser: &mut ParserContext<'_>) -> Result<expression::Expression, ParserError>;
+    fn parse_prefix(parser: &mut Parser<'_>) -> Result<expression::Expression, ParserError>;
 }
 
 pub trait ParseInfix {
     fn parse_infix(
-        parser: &mut ParserContext<'_>,
+        parser: &mut Parser<'_>,
         left: expression::Expression,
     ) -> Result<expression::Expression, ParserError>;
 }
 
-type PrefixParseFn = fn(&mut ParserContext<'_>) -> Result<expression::Expression, ParserError>;
-type InfixParseFn = fn(
-    &mut ParserContext<'_>,
-    expression::Expression,
-) -> Result<expression::Expression, ParserError>;
+type PrefixParseFn = fn(&mut Parser<'_>) -> Result<expression::Expression, ParserError>;
+type InfixParseFn =
+    fn(&mut Parser<'_>, expression::Expression) -> Result<expression::Expression, ParserError>;
 
-pub struct ParserContext<'a> {
+pub struct Parser<'a> {
     lexer: &'a mut Lexer<'a>,
     pub token: Token,
     pub peek: Token,
@@ -37,7 +35,7 @@ pub struct ParserContext<'a> {
     infix_fns: HashMap<TokenKind, InfixParseFn>,
 }
 
-impl<'a> ParserContext<'a> {
+impl<'a> Parser<'a> {
     pub fn new(lexer: &'a mut Lexer<'a>) -> Self {
         // Start the parser in a working state.
         let token = lexer.get_next_token();
@@ -111,12 +109,12 @@ impl<'a> ParserContext<'a> {
     ///
     /// ```
     /// # use monkey::lexer::Lexer;
-    /// # use monkey::parser::ParserContext;
+    /// # use monkey::parser::Parser;
     /// # use monkey::token::TokenKind;
     /// # fn main() {
     /// let input = "let five = 5;";
     /// let mut lexer = Lexer::new(&input);
-    /// let mut parser = ParserContext::new(&mut lexer);
+    /// let mut parser = Parser::new(&mut lexer);
     ///
     /// assert_eq!(parser.token.kind, TokenKind::Let);
     /// let identifier = parser.expect_peek(TokenKind::Identifier).unwrap();
@@ -135,9 +133,7 @@ impl<'a> ParserContext<'a> {
     }
 }
 
-pub fn parse_statement(
-    parser: &mut ParserContext<'_>,
-) -> Result<statement::Statement, ParserError> {
+pub fn parse_statement(parser: &mut Parser<'_>) -> Result<statement::Statement, ParserError> {
     let statement = match parser.token.kind {
         TokenKind::Let => statement::Let::parse(parser),
         TokenKind::Return => statement::Return::parse(parser),
@@ -148,7 +144,7 @@ pub fn parse_statement(
 }
 
 pub fn parse_expression(
-    parser: &mut ParserContext<'_>,
+    parser: &mut Parser<'_>,
     precedence: Precedence,
 ) -> Result<expression::Expression, ParserError> {
     let mut left = match parser.prefix_fns.get(&parser.token.kind) {
@@ -181,7 +177,7 @@ pub fn parse_expression(
 }
 
 pub fn parse_grouped_expression(
-    parser: &mut ParserContext<'_>,
+    parser: &mut Parser<'_>,
 ) -> Result<expression::Expression, ParserError> {
     debug_assert_eq!(parser.token.kind, TokenKind::LParenthesis);
     parser.advance();
@@ -258,7 +254,7 @@ lazy_static! {
 //         "#;
 //
 //         let mut lexer = Lexer::new(&input);
-//         let mut parser = ParserContext::new(&mut lexer);
+//         let mut parser = Parser::new(&mut lexer);
 //
 //         let program: Program = Program::parse(&mut parser).unwrap().into();
 //         assert_eq!(program.statements.len(), 3);

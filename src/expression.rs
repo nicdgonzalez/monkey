@@ -3,11 +3,10 @@ use crate::token::{Token, TokenKind};
 
 use super::ast::Node;
 use super::parser::{
-    parse_expression, Parse, ParseInfix, ParsePrefix, ParserContext, ParserError, Precedence,
-    PRECEDENCES,
+    parse_expression, Parse, ParseInfix, ParsePrefix, Parser, ParserError, Precedence, PRECEDENCES,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expression {
     Identifier(Identifier),
     IntegerLiteral(IntegerLiteral),
@@ -47,7 +46,7 @@ impl std::fmt::Display for Expression {
 // │ Implementations for Identifier │
 // └────────────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Identifier {
     pub token: Token,
 }
@@ -65,7 +64,7 @@ impl From<Identifier> for Node {
 }
 
 impl ParsePrefix for Identifier {
-    fn parse_prefix(parser: &mut ParserContext<'_>) -> Result<Expression, ParserError> {
+    fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
         let node = parser
             .expect_token(TokenKind::Identifier)
             .map(|token| Self { token })?
@@ -85,7 +84,7 @@ impl std::fmt::Display for Identifier {
 // │ Implementations for Integer Literal │
 // └─────────────────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IntegerLiteral {
     pub token: Token,
     pub value: i64,
@@ -104,7 +103,7 @@ impl From<IntegerLiteral> for Node {
 }
 
 impl ParsePrefix for IntegerLiteral {
-    fn parse_prefix(parser: &mut ParserContext<'_>) -> Result<Expression, ParserError> {
+    fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
         let node = parser
             .expect_token(TokenKind::Integer)
             .map(|token| {
@@ -127,7 +126,7 @@ impl std::fmt::Display for IntegerLiteral {
 // │ Implementations for Prefix │
 // └────────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Prefix {
     pub token: Token,
     pub right: Box<Expression>,
@@ -145,7 +144,7 @@ impl From<Prefix> for Node {
 }
 
 impl ParsePrefix for Prefix {
-    fn parse_prefix(parser: &mut ParserContext<'_>) -> Result<Expression, ParserError> {
+    fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
         debug_assert!(
             parser.token.kind == TokenKind::Minus || parser.token.kind == TokenKind::Bang
         );
@@ -172,7 +171,7 @@ impl std::fmt::Display for Prefix {
 // │ Implementations for Infix │
 // └───────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Infix {
     pub token: Token,
     pub left: Box<Expression>,
@@ -192,10 +191,7 @@ impl From<Infix> for Node {
 }
 
 impl ParseInfix for Infix {
-    fn parse_infix(
-        parser: &mut ParserContext<'_>,
-        left: Expression,
-    ) -> Result<Expression, ParserError> {
+    fn parse_infix(parser: &mut Parser<'_>, left: Expression) -> Result<Expression, ParserError> {
         let token = parser.token.clone();
         let precedence = PRECEDENCES
             .get(&parser.token.kind)
@@ -223,7 +219,7 @@ impl std::fmt::Display for Infix {
 // │ Implementations for Boolean │
 // └─────────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Boolean {
     pub token: Token,
     pub value: bool,
@@ -242,7 +238,7 @@ impl From<Boolean> for Node {
 }
 
 impl ParsePrefix for Boolean {
-    fn parse_prefix(parser: &mut ParserContext<'_>) -> Result<Expression, ParserError> {
+    fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
         let token = parser.token.clone();
         let value = token.kind == TokenKind::True;
         let node = Self { token, value }.into();
@@ -260,7 +256,7 @@ impl std::fmt::Display for Boolean {
 // │ Implementations for If │
 // └────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct If {
     pub token: Token,
     pub condition: Box<Expression>,
@@ -281,7 +277,7 @@ impl From<If> for Node {
 }
 
 impl ParsePrefix for If {
-    fn parse_prefix(parser: &mut ParserContext<'_>) -> Result<Expression, ParserError> {
+    fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
         debug_assert_eq!(parser.token.kind, TokenKind::If);
         let token = parser.token.clone();
 
@@ -335,7 +331,7 @@ impl std::fmt::Display for If {
 // │ Implementations for Function Literal │
 // └──────────────────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FunctionLiteral {
     pub token: Token,
     pub parameters: Vec<Identifier>,
@@ -355,7 +351,7 @@ impl From<FunctionLiteral> for Node {
 }
 
 impl ParsePrefix for FunctionLiteral {
-    fn parse_prefix(parser: &mut ParserContext<'_>) -> Result<Expression, ParserError> {
+    fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
         debug_assert_eq!(parser.token.kind, TokenKind::Function);
         let token = parser.token.clone();
 
@@ -377,9 +373,7 @@ impl ParsePrefix for FunctionLiteral {
     }
 }
 
-fn parse_function_parameters(
-    parser: &mut ParserContext<'_>,
-) -> Result<Vec<Identifier>, ParserError> {
+fn parse_function_parameters(parser: &mut Parser<'_>) -> Result<Vec<Identifier>, ParserError> {
     let mut parameters = Vec::<Identifier>::new();
     debug_assert_eq!(parser.token.kind, TokenKind::LParenthesis);
     parser.advance();
@@ -431,7 +425,7 @@ impl std::fmt::Display for FunctionLiteral {
 // │ Implementations for Call │
 // └──────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Call {
     pub token: Token,
     pub function: Box<Expression>,
@@ -452,7 +446,7 @@ impl From<Call> for Node {
 
 impl ParseInfix for Call {
     fn parse_infix(
-        parser: &mut ParserContext<'_>,
+        parser: &mut Parser<'_>,
         function: Expression,
     ) -> Result<Expression, ParserError> {
         debug_assert_eq!(parser.token.kind, TokenKind::LParenthesis);
@@ -467,9 +461,7 @@ impl ParseInfix for Call {
     }
 }
 
-fn parse_call_arguments(
-    parser: &mut ParserContext<'_>,
-) -> Result<Vec<Box<Expression>>, ParserError> {
+fn parse_call_arguments(parser: &mut Parser<'_>) -> Result<Vec<Box<Expression>>, ParserError> {
     let mut arguments = Vec::<Box<Expression>>::new();
     debug_assert_eq!(parser.token.kind, TokenKind::LParenthesis);
     parser.advance();

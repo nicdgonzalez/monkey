@@ -2,12 +2,10 @@ use core::panic;
 
 use crate::ast::Node;
 use crate::expression;
-use crate::parser::{
-    parse_expression, parse_statement, Parse, ParserContext, ParserError, Precedence,
-};
+use crate::parser::{parse_expression, parse_statement, Parse, Parser, ParserError, Precedence};
 use crate::token::{Token, TokenKind};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Statement {
     Let(Let),
     Return(Return),
@@ -39,7 +37,7 @@ impl std::fmt::Display for Statement {
 // │ Implementations for Let │
 // └─────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Let {
     pub token: Token,
     pub name: expression::Identifier,
@@ -71,7 +69,7 @@ impl From<Node> for Let {
 }
 
 impl Parse for Let {
-    fn parse(parser: &mut ParserContext<'_>) -> Result<Node, ParserError> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
         // Parse "let" keyword.
         assert_eq!(parser.token.kind, TokenKind::Let);
         let token = parser.token.clone();
@@ -113,7 +111,7 @@ impl std::fmt::Display for Let {
 // │ Implementations for Return │
 // └────────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Return {
     pub token: Token,
     pub value: Box<expression::Expression>,
@@ -144,7 +142,7 @@ impl From<Node> for Return {
 }
 
 impl Parse for Return {
-    fn parse(parser: &mut ParserContext<'_>) -> Result<Node, ParserError> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
         // Parse "return" keyword.
         debug_assert_eq!(parser.token.kind, TokenKind::Return);
         let token = parser.token.clone();
@@ -177,7 +175,7 @@ impl std::fmt::Display for Return {
 // │ Implementations for Expression │
 // └────────────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Expression {
     pub token: Token,
     pub expression: Box<expression::Expression>,
@@ -208,7 +206,7 @@ impl From<Node> for Expression {
 }
 
 impl Parse for Expression {
-    fn parse(parser: &mut ParserContext<'_>) -> Result<Node, ParserError> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
         let token = parser.token.clone();
         let expr = parse_expression(parser, Precedence::Lowest)?;
 
@@ -234,7 +232,7 @@ impl std::fmt::Display for Expression {
 // │ Implementations for Block │
 // └───────────────────────────┘
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Block {
     pub token: Token,
     pub statements: Vec<Statement>,
@@ -268,7 +266,7 @@ impl From<Node> for Block {
 }
 
 impl Parse for Block {
-    fn parse(parser: &mut ParserContext<'_>) -> Result<Node, ParserError> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
         debug_assert_eq!(parser.token.kind, TokenKind::LBrace);
         let token = parser.token.clone();
         parser.advance();

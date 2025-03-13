@@ -1,7 +1,7 @@
 //! Implementation for the Abstract Syntax Tree (AST).
 
 use crate::expression::Expression;
-use crate::parser::{parse_statement, Parse, ParserContext, ParserError};
+use crate::parser::{parse_statement, Parse, Parser, ParserError};
 use crate::statement::Statement;
 use crate::token::TokenKind;
 
@@ -53,7 +53,7 @@ impl From<Node> for Program {
 }
 
 impl Parse for Program {
-    fn parse(parser: &mut ParserContext<'_>) -> Result<Node, ParserError> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
         let mut program = Self::new();
 
         while parser.token.kind != TokenKind::EndOfFile {
@@ -65,8 +65,7 @@ impl Parse for Program {
             parser.advance();
         }
 
-        eprintln!("AST (Abstract Syntax Tree): {:#?}", program.statements);
-
+        // eprintln!("AST (Abstract Syntax Tree): {:#?}", program.statements);
         Ok(program.into())
     }
 }
