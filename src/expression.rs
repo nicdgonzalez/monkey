@@ -1,4 +1,4 @@
-use crate::statement::{self, Block};
+use crate::statement;
 use crate::token::{Token, TokenKind};
 
 use super::ast::Node;
@@ -30,14 +30,15 @@ impl From<Node> for Expression {
 impl std::fmt::Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Identifier(inner) => write!(f, "{}", inner),
-            Self::IntegerLiteral(inner) => write!(f, "{}", inner),
-            Self::Prefix(inner) => write!(f, "{}", inner),
-            Self::Infix(inner) => write!(f, "{}", inner),
-            Self::Boolean(inner) => write!(f, "{}", inner),
-            Self::If(inner) => write!(f, "{}", inner),
-            Self::FunctionLiteral(inner) => write!(f, "{}", inner),
-            Self::Call(inner) => write!(f, "{}", inner),
+            inner => write!(f, "{}", inner),
+            // Self::Identifier(inner) => write!(f, "{}", inner),
+            // Self::IntegerLiteral(inner) => write!(f, "{}", inner),
+            // Self::Prefix(inner) => write!(f, "{}", inner),
+            // Self::Infix(inner) => write!(f, "{}", inner),
+            // Self::Boolean(inner) => write!(f, "{}", inner),
+            // Self::If(inner) => write!(f, "{}", inner),
+            // Self::FunctionLiteral(inner) => write!(f, "{}", inner),
+            // Self::Call(inner) => write!(f, "{}", inner),
         }
     }
 }
@@ -335,7 +336,7 @@ impl std::fmt::Display for If {
 pub struct FunctionLiteral {
     pub token: Token,
     pub parameters: Vec<Identifier>,
-    pub body: Block,
+    pub body: statement::Block,
 }
 
 impl From<FunctionLiteral> for Expression {

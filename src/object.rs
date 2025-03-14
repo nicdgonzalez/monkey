@@ -4,11 +4,13 @@ pub const NULL: Object = Object::Null(Null {});
 pub const TRUE: Object = Object::Boolean(Boolean { value: true });
 pub const FALSE: Object = Object::Boolean(Boolean { value: false });
 
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Object {
     Integer(Integer),
     Boolean(Boolean),
     Null(Null),
+    Return(Return),
+    Error(Error),
 }
 
 impl std::fmt::Display for Object {
@@ -17,18 +19,20 @@ impl std::fmt::Display for Object {
             Self::Integer(inner) => write!(f, "{}", inner.value),
             Self::Boolean(inner) => write!(f, "{}", inner.value),
             Self::Null(_) => write!(f, "null"),
+            Self::Return(inner) => write!(f, "{}", *inner.value),
+            Self::Error(inner) => write!(f, "ERROR: {}", inner.message),
         }
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Integer {
     pub value: i64,
 }
 
 impl From<Integer> for Object {
     fn from(value: Integer) -> Self {
-        Object::Integer(value)
+        Self::Integer(value)
     }
 }
 
@@ -38,14 +42,14 @@ impl From<expression::IntegerLiteral> for Integer {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Boolean {
     pub value: bool,
 }
 
 impl From<Boolean> for Object {
     fn from(value: Boolean) -> Self {
-        Object::Boolean(value)
+        Self::Boolean(value)
     }
 }
 
@@ -55,11 +59,33 @@ impl From<expression::Boolean> for Boolean {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Null;
 
 impl From<Null> for Object {
     fn from(value: Null) -> Self {
-        Object::Null(value)
+        Self::Null(value)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Return {
+    pub value: Box<Object>,
+}
+
+impl From<Return> for Object {
+    fn from(value: Return) -> Self {
+        Self::Return(value)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Error {
+    pub message: String,
+}
+
+impl From<Error> for Object {
+    fn from(value: Error) -> Self {
+        Self::Error(value)
     }
 }

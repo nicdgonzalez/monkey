@@ -1,10 +1,11 @@
 use std::io::Write;
 
-use monkey::{evaluator, Lexer, Program};
+use monkey::{evaluator, Environment, Lexer, Program};
 use monkey::{Parse, Parser};
 
 fn main() {
     let mut buffer = String::new();
+    let mut env = Environment::new();
 
     println!(
         "Hello! Welcome to the Monkey programming language!\n\
@@ -35,7 +36,7 @@ fn main() {
             }
         }
 
-        let value = evaluator::eval(program.into());
+        let value = evaluator::eval(program.into(), &mut env);
         println!("{}", value);
 
         buffer.clear();
