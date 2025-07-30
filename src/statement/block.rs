@@ -1,0 +1,51 @@
+use crate::ast::Node;
+use crate::parser::{Parse, Parser, ParserError};
+use crate::statement::Statement;
+use crate::token::{Token, TokenKind};
+
+#[derive(Debug)]
+pub struct Block {
+    token: Token,
+    statements: Vec<Statement>,
+}
+
+impl Block {
+    pub fn new(token: Token, statements: Vec<Statement>) -> Self {
+        Self { token, statements }
+    }
+
+    pub const fn token(&self) -> &Token {
+        &self.token
+    }
+
+    pub fn statements(&self) -> &[Statement] {
+        &self.statements
+    }
+}
+
+impl Parse for Block {
+    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
+        let token = parser.expect_token_with_kind(TokenKind::LBrace)?;
+
+        let mut statements = Vec::new();
+
+        while parser
+            .token()
+            .is_some_and(|token| token.kind() != TokenKind::RBrace)
+        {
+            match Statement::parse(parser) {
+                Ok(statement) => statements.push(statement.into_statement_unchecked()),
+                Err(_) => (), // TODO: The book doesn't handle errors here, so I'll wait.
+            }
+
+            parser.advance();
+        }
+
+        // TODO: Better error message would be nice. Forgetting to close the curly braces should
+        // result in a nice syntax error.
+        _ = parser.expect_token_with_kind(TokenKind::RBrace)?;
+
+        let statement = Self::new(token, statements);
+        Ok(Node::Statement(statement.into()))
+    }
+}
