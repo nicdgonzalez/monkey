@@ -1,4 +1,7 @@
 use crate::ast::Node;
+use crate::environment::Environment;
+use crate::evaluator::Evaluate;
+use crate::object::{NULL, Object};
 use crate::parser::{Parse, Parser, ParserError};
 use crate::statement::Statement;
 use crate::token::{Token, TokenKind};
@@ -43,9 +46,25 @@ impl Parse for Block {
 
         // TODO: Better error message would be nice. Forgetting to close the curly braces should
         // result in a nice syntax error.
-        _ = parser.expect_token_with_kind(TokenKind::RBrace)?;
+        // _ = parser.expect_token_with_kind(TokenKind::RBrace)?;
 
         let statement = Self::new(token, statements);
         Ok(Node::Statement(statement.into()))
+    }
+}
+
+impl Evaluate for Block {
+    fn evaluate(&self, env: &mut Environment) -> Object {
+        let mut value = NULL;
+
+        for statement in &self.statements {
+            value = statement.evaluate(env);
+
+            if matches!(value, Object::Return(_) | Object::Error(_)) {
+                break;
+            }
+        }
+
+        value
     }
 }

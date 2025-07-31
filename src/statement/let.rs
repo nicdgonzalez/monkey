@@ -1,5 +1,8 @@
 use crate::ast::Node;
+use crate::environment::Environment;
+use crate::evaluator::Evaluate;
 use crate::expression::{self, Identifier};
+use crate::object::{Error, Object};
 use crate::parser::{Parse, Parser, ParserError};
 use crate::precedence::Precedence;
 use crate::token::{Token, TokenKind};
@@ -43,5 +46,24 @@ impl Parse for Let {
 
         let statement = Self::new(token, name, value);
         Ok(Node::Statement(statement.into()))
+    }
+}
+
+impl Evaluate for Let {
+    fn evaluate(&self, env: &mut Environment) -> Object {
+        let value = self.value.evaluate(env);
+
+        if matches!(value, Object::Error(_)) {
+            return value;
+        }
+
+        let identifier = self.name().token().literal();
+        match env.store_mut().insert(identifier.to_owned(), value.clone()) {
+            Some(_) => {
+                let message = format!("variable named {identifier:?} already exists");
+                Error::new(message).into()
+            }
+            None => value,
+        }
     }
 }

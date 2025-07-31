@@ -49,6 +49,7 @@ fn parse_call_arguments(parser: &mut Parser<'_>) -> Result<Vec<Box<Expression>>,
 
     arguments.push(Box::new(Expression::parse(parser, Precedence::Lowest)?));
 
+    // TODO: Function calls are breaking at the comma.
     while parser
         .token()
         .is_some_and(|token| token.kind() == TokenKind::Comma)
@@ -59,6 +60,12 @@ fn parse_call_arguments(parser: &mut Parser<'_>) -> Result<Vec<Box<Expression>>,
         );
         _ = parser.advance();
 
+        // I don't think this part is properly advancing.
+        //
+        // The error says "comma is missing prefix fn", which is the first statement in
+        // Expression::parse.
+        //
+        // TODO: Add `tracing` crate and a flag to enable logging.
         arguments.push(Box::new(Expression::parse(parser, Precedence::Lowest)?));
     }
 

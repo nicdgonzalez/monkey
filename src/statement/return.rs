@@ -1,8 +1,11 @@
 use crate::ast::Node;
-use crate::expression;
+use crate::environment::Environment;
+use crate::evaluator::Evaluate;
+use crate::object::Object;
 use crate::parser::{Parse, Parser, ParserError};
 use crate::precedence::Precedence;
 use crate::token::{Token, TokenKind};
+use crate::{expression, object};
 
 #[derive(Debug)]
 pub struct Return {
@@ -40,5 +43,17 @@ impl Parse for Return {
 
         let statement = Self::new(token, value);
         Ok(Node::Statement(statement.into()))
+    }
+}
+
+impl Evaluate for Return {
+    fn evaluate(&self, env: &mut Environment) -> Object {
+        let value = self.value.evaluate(env);
+
+        if matches!(value, Object::Error(_)) {
+            return value;
+        }
+
+        object::Return::new(Box::new(value)).into()
     }
 }

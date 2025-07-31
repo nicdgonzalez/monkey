@@ -1,6 +1,8 @@
+use std::ops;
+
 use crate::expression;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Boolean {
     value: bool,
 }
@@ -20,5 +22,19 @@ impl From<expression::Boolean> for Boolean {
         Self {
             value: value.value(),
         }
+    }
+}
+
+impl From<Boolean> for bool {
+    fn from(value: Boolean) -> Self {
+        value.value()
+    }
+}
+
+impl ops::Not for Boolean {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        Self::new(!self.value)
     }
 }

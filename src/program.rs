@@ -4,7 +4,6 @@ use crate::evaluator::Evaluate;
 use crate::object::{NULL, Object};
 use crate::parser::{Parse, Parser, ParserError};
 use crate::statement::Statement;
-use crate::token::TokenKind;
 
 #[derive(Debug, Default)]
 pub struct Program {
@@ -50,7 +49,7 @@ impl Evaluate for Program {
     fn evaluate(&self, env: &mut Environment) -> Object {
         let mut result = NULL;
 
-        for statement in self.statements {
+        for statement in &self.statements {
             result = statement.evaluate(env);
 
             match result {

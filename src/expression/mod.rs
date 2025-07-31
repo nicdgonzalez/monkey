@@ -8,6 +8,8 @@ mod infix;
 mod integer_literal;
 mod prefix;
 
+use crate::evaluator::Evaluate;
+use crate::object::NULL;
 use crate::parser::{INFIX, PREFIX, Parser, ParserError};
 use crate::precedence::{PRECEDENCES, Precedence};
 use crate::token::TokenKind;
@@ -64,6 +66,22 @@ impl Expression {
         }
 
         Ok(left)
+    }
+}
+
+impl Evaluate for Expression {
+    fn evaluate(&self, env: &mut crate::environment::Environment) -> crate::object::Object {
+        let inner: &dyn Evaluate = match *self {
+            Self::Identifier(ref inner) => inner,
+            Self::IntegerLiteral(ref inner) => inner,
+            Self::Prefix(ref inner) => inner,
+            Self::Infix(ref inner) => inner,
+            Self::Boolean(ref inner) => inner,
+            Self::If(ref inner) => inner,
+            Self::Call(_) | Self::FunctionLiteral(_) => return NULL,
+        };
+
+        (*inner).evaluate(env)
     }
 }
 

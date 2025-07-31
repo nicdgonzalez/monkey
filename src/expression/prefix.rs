@@ -1,4 +1,7 @@
+use crate::environment::Environment;
+use crate::evaluator::Evaluate;
 use crate::expression::Expression;
+use crate::object::{Error, Integer, Object};
 use crate::parser::{ParsePrefix, Parser, ParserError};
 use crate::precedence::Precedence;
 use crate::token::{Token, TokenKind};
@@ -36,5 +39,24 @@ impl ParsePrefix for Prefix {
 
         let expression = Self::new(token, right);
         Ok(expression.into())
+    }
+}
+
+impl Evaluate for Prefix {
+    fn evaluate(&self, env: &mut Environment) -> Object {
+        let right = self.right.evaluate(env);
+
+        if matches!(right, Object::Error(_)) {
+            return right;
+        }
+
+        match self.token.kind() {
+            TokenKind::Bang => (!right.as_boolean()).into(),
+            TokenKind::Minus => match right {
+                Object::Integer(inner) => Integer::new(-inner.value()).into(),
+                _ => Error::new(format!("unknown operator: -{right:?}")).into(),
+            },
+            kind => Error::new(format!("unknown operator: {kind:?}")).into(),
+        }
     }
 }

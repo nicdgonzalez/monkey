@@ -11,4 +11,12 @@ impl Environment {
     pub fn new(store: HashMap<String, Object>) -> Self {
         Self { store }
     }
+
+    pub fn store(&self) -> &HashMap<String, Object> {
+        &self.store
+    }
+
+    pub fn store_mut(&mut self) -> &mut HashMap<String, Object> {
+        &mut self.store
+    }
 }

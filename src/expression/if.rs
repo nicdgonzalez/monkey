@@ -1,5 +1,8 @@
 use crate::ast::Node;
+use crate::environment::Environment;
+use crate::evaluator::Evaluate;
 use crate::expression::Expression;
+use crate::object::{NULL, Object};
 use crate::parser::{Parse, ParsePrefix, Parser, ParserError};
 use crate::precedence::Precedence;
 use crate::statement::{Block, Statement};
@@ -72,5 +75,23 @@ impl ParsePrefix for If {
 
         let expression = Self::new(token, condition, consequence, alternative);
         Ok(expression.into())
+    }
+}
+
+impl Evaluate for If {
+    fn evaluate(&self, env: &mut Environment) -> Object {
+        let condition = self.condition.evaluate(env);
+
+        if matches!(condition, Object::Error(_)) {
+            return condition;
+        }
+
+        if condition.as_boolean().value() {
+            self.condition.evaluate(env)
+        } else if self.alternative.is_some() {
+            self.alternative.as_ref().unwrap().evaluate(env)
+        } else {
+            NULL
+        }
     }
 }

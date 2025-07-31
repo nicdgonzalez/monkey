@@ -1,5 +1,8 @@
 use crate::ast::Node;
+use crate::environment::Environment;
+use crate::evaluator::Evaluate;
 use crate::expression;
+use crate::object::Object;
 use crate::parser::{Parse, Parser, ParserError};
 use crate::precedence::Precedence;
 use crate::token::{Token, TokenKind};
@@ -40,5 +43,11 @@ impl Parse for Expression {
 
         let statement = Self::new(token, expression);
         Ok(Node::Statement(statement.into()))
+    }
+}
+
+impl Evaluate for Expression {
+    fn evaluate(&self, env: &mut Environment) -> Object {
+        self.expression.evaluate(env)
     }
 }

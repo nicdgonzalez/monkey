@@ -12,12 +12,15 @@ mod token;
 
 use std::io::{self, Write as _};
 
+use crate::environment::Environment;
+use crate::evaluator::Evaluate;
 use crate::lexer::Lexer;
 use crate::parser::{Parse, Parser};
 use crate::program::Program;
 
 fn main() {
     let mut buffer = String::new();
+    let mut env = Environment::default();
 
     _ = writeln!(
         io::stdout(),
@@ -47,7 +50,10 @@ fn main() {
             }
         }
 
-        _ = writeln!(io::stdout(), "AST: {:#?}", program.statements());
+        // _ = writeln!(io::stdout(), "AST: {:#?}", program.statements());
+
+        let value = program.evaluate(&mut env);
+        _ = writeln!(io::stdout(), "{}", value);
 
         buffer.clear();
     }

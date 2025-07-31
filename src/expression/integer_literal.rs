@@ -1,4 +1,7 @@
+use crate::environment::Environment;
+use crate::evaluator::Evaluate;
 use crate::expression::Expression;
+use crate::object::{Integer, Object};
 use crate::parser::{ParsePrefix, Parser, ParserError};
 use crate::token::{Token, TokenKind};
 
@@ -31,5 +34,11 @@ impl ParsePrefix for IntegerLiteral {
                 Self::new(token, value)
             })
             .map(Expression::from)
+    }
+}
+
+impl Evaluate for IntegerLiteral {
+    fn evaluate(&self, _: &mut Environment) -> Object {
+        Integer::new(self.value).into()
     }
 }

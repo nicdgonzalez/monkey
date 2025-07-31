@@ -38,7 +38,14 @@ impl Parse for Statement {
 
 impl Evaluate for Statement {
     fn evaluate(&self, env: &mut Environment) -> Object {
-        todo!()
+        let inner: &dyn Evaluate = match *self {
+            Self::Let(ref inner) => inner,
+            Self::Return(ref inner) => inner,
+            Self::Expression(ref inner) => inner,
+            Self::Block(ref inner) => inner,
+        };
+
+        inner.evaluate(env)
     }
 }
 

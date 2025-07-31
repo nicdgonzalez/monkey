@@ -1,8 +1,11 @@
+use crate::environment::Environment;
+use crate::evaluator::Evaluate;
 use crate::expression::Expression;
+use crate::object::{self, Object};
 use crate::parser::{ParsePrefix, Parser, ParserError};
 use crate::token::{Token, TokenKind};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Boolean {
     token: Token,
     value: bool,
@@ -35,5 +38,11 @@ impl ParsePrefix for Boolean {
 
         let expression = Self::new(token, value);
         Ok(expression.into())
+    }
+}
+
+impl Evaluate for Boolean {
+    fn evaluate(&self, _: &mut Environment) -> Object {
+        object::Boolean::new(self.value).into()
     }
 }
