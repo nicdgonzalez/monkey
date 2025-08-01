@@ -24,7 +24,7 @@ pub use infix::Infix;
 pub use integer_literal::IntegerLiteral;
 pub use prefix::Prefix;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expression {
     Identifier(Identifier),
     IntegerLiteral(IntegerLiteral),
@@ -40,19 +40,31 @@ impl Expression {
     pub fn parse(parser: &mut Parser<'_>, precedence: Precedence) -> Result<Self, ParserError> {
         assert_ne!(parser.token(), None, "Expression::parse called after EOF");
         let token = parser.token().unwrap().to_owned();
+        tracing::debug!("{token:?}");
         let mut left = PREFIX
             .get(&token.kind())
             .map(|callback| callback(parser)) // NOTE: `callback` advances the parser.
             .expect(&format!("missing parse_prefix fn: {:?}", token))?;
 
+        let span = tracing::trace_span!("while");
         while parser
             .token()
             .is_some_and(|token| token.kind() != TokenKind::Semicolon)
         {
+            let _enter = span.enter();
+
             let token = parser.token().unwrap();
+            tracing::debug!("{token:?}");
             let peek_precedence = PRECEDENCES
                 .get(&token.kind())
                 .unwrap_or(&Precedence::Lowest);
+
+            tracing::debug!(
+                "{:?} < {:?} (breaking = {})",
+                *peek_precedence,
+                precedence,
+                *peek_precedence < precedence
+            );
 
             if *peek_precedence < precedence {
                 break;

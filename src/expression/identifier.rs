@@ -5,7 +5,7 @@ use crate::object::{Error, Object};
 use crate::parser::{ParsePrefix, Parser, ParserError};
 use crate::token::{Token, TokenKind};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Identifier {
     token: Token,
 }
@@ -33,7 +33,7 @@ impl Evaluate for Identifier {
     fn evaluate(&self, env: &mut Environment) -> Object {
         let identifier = self.token.literal();
 
-        match env.store().get(identifier) {
+        match env.get(identifier) {
             Some(value) => value.to_owned(),
             None => Error::new(format!("identifier {identifier:?} is not defined")).into(),
         }

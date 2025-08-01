@@ -1,4 +1,3 @@
-use crate::ast::Node;
 use crate::environment::Environment;
 use crate::evaluator::Evaluate;
 use crate::expression::{self, Identifier};
@@ -7,7 +6,7 @@ use crate::parser::{Parse, Parser, ParserError};
 use crate::precedence::Precedence;
 use crate::token::{Token, TokenKind};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Let {
     token: Token,
     name: Identifier,
@@ -33,7 +32,7 @@ impl Let {
 }
 
 impl Parse for Let {
-    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
         let token = parser.expect_token_with_kind(TokenKind::Let)?;
 
         let name = parser
@@ -44,8 +43,7 @@ impl Parse for Let {
 
         let value = expression::Expression::parse(parser, Precedence::Lowest)?;
 
-        let statement = Self::new(token, name, value);
-        Ok(Node::Statement(statement.into()))
+        Ok(Self::new(token, name, value))
     }
 }
 
@@ -58,6 +56,7 @@ impl Evaluate for Let {
         }
 
         let identifier = self.name().token().literal();
+        tracing::debug!("adding identifier {identifier:?} to store");
         match env.store_mut().insert(identifier.to_owned(), value.clone()) {
             Some(_) => {
                 let message = format!("variable named {identifier:?} already exists");

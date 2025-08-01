@@ -5,7 +5,7 @@ use crate::object::{Integer, Object};
 use crate::parser::{ParsePrefix, Parser, ParserError};
 use crate::token::{Token, TokenKind};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IntegerLiteral {
     token: Token,
     value: i64,

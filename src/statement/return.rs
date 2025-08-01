@@ -1,4 +1,3 @@
-use crate::ast::Node;
 use crate::environment::Environment;
 use crate::evaluator::Evaluate;
 use crate::object::Object;
@@ -7,7 +6,7 @@ use crate::precedence::Precedence;
 use crate::token::{Token, TokenKind};
 use crate::{expression, object};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Return {
     token: Token,
     value: expression::Expression,
@@ -28,7 +27,7 @@ impl Return {
 }
 
 impl Parse for Return {
-    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
         let token = parser.expect_token_with_kind(TokenKind::Return)?;
 
         let value = expression::Expression::parse(parser, Precedence::Lowest)?.into();
@@ -41,8 +40,7 @@ impl Parse for Return {
             parser.advance();
         }
 
-        let statement = Self::new(token, value);
-        Ok(Node::Statement(statement.into()))
+        Ok(Self::new(token, value))
     }
 }
 

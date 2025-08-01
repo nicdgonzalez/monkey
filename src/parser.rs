@@ -1,16 +1,16 @@
 use std::collections::HashMap;
 use std::{error, fmt};
 
-use crate::ast::Node;
 use crate::expression::{
     Boolean, Call, Expression, FunctionLiteral, Grouped, Identifier, If, Infix, IntegerLiteral,
     Prefix,
 };
 use crate::lexer::Tokens;
+use crate::statement::Statement;
 use crate::token::{Token, TokenKind};
 
-pub trait Parse {
-    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError>;
+pub trait Parse<S: Into<Statement> = Self> {
+    fn parse(parser: &mut Parser<'_>) -> Result<S, ParserError>;
 }
 
 pub trait ParsePrefix {
@@ -113,7 +113,7 @@ impl fmt::Display for ParserError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             Self::WrongTokenKind { expected, actual } => {
-                write!(f, "expected token kind {expected:?}, got {actual:?}")
+                write!(f, "expected {expected:?}, got {actual:?}")
             }
         }
     }

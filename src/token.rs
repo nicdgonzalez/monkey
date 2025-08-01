@@ -1,7 +1,9 @@
+use std::fmt;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TokenKind {
     Illegal,
-    EndOfFile,
+    // EndOfFile,
     Identifier,
     Integer,
     Assign,
@@ -54,7 +56,7 @@ impl Token {
 impl From<String> for Token {
     fn from(value: String) -> Self {
         let kind = match value.as_ref() {
-            "" => TokenKind::EndOfFile,
+            // "" => TokenKind::EndOfFile,
             "=" => TokenKind::Assign,
             "+" => TokenKind::Plus,
             "-" => TokenKind::Minus,
@@ -104,5 +106,41 @@ fn is_valid_identifier(value: &str) -> bool {
 impl From<char> for Token {
     fn from(value: char) -> Self {
         Token::from(value.to_string())
+    }
+}
+
+impl fmt::Display for TokenKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Self::Illegal => "ILLEGAL".fmt(f),
+            // Self::EndOfFile => "EOF".fmt(f),
+            Self::Identifier => "IDENTIFIER".fmt(f),
+            Self::Integer => "INTEGER".fmt(f),
+            Self::Assign => "=".fmt(f),
+            Self::Plus => "+".fmt(f),
+            Self::Minus => "-".fmt(f),
+            Self::Bang => "!".fmt(f),
+            Self::Asterisk => "*".fmt(f),
+            Self::Slash => "/".fmt(f),
+            Self::LessThan => "<".fmt(f),
+            Self::GreaterThan => ">".fmt(f),
+            Self::Equal => "==".fmt(f),
+            Self::NotEqual => "!=".fmt(f),
+            Self::LessThanOrEqual => "<=".fmt(f),
+            Self::GreaterThanOrEqual => ">=".fmt(f),
+            Self::Comma => ",".fmt(f),
+            Self::Semicolon => ";".fmt(f),
+            Self::LParenthesis => "(".fmt(f),
+            Self::RParenthesis => ")".fmt(f),
+            Self::LBrace => "{".fmt(f),
+            Self::RBrace => "}".fmt(f),
+            Self::Function => "fn".fmt(f),
+            Self::Let => "let".fmt(f),
+            Self::True => "true".fmt(f),
+            Self::False => "false".fmt(f),
+            Self::If => "if".fmt(f),
+            Self::Else => "else".fmt(f),
+            Self::Return => "return".fmt(f),
+        }
     }
 }

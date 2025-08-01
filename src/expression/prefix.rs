@@ -6,7 +6,7 @@ use crate::parser::{ParsePrefix, Parser, ParserError};
 use crate::precedence::Precedence;
 use crate::token::{Token, TokenKind};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Prefix {
     token: Token,
     right: Box<Expression>,

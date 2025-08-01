@@ -1,4 +1,3 @@
-use crate::ast::Node;
 use crate::environment::Environment;
 use crate::evaluator::Evaluate;
 use crate::object::{NULL, Object};
@@ -6,7 +5,7 @@ use crate::parser::{Parse, Parser, ParserError};
 use crate::statement::Statement;
 use crate::token::{Token, TokenKind};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Block {
     token: Token,
     statements: Vec<Statement>,
@@ -27,7 +26,7 @@ impl Block {
 }
 
 impl Parse for Block {
-    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
         let token = parser.expect_token_with_kind(TokenKind::LBrace)?;
 
         let mut statements = Vec::new();
@@ -37,7 +36,7 @@ impl Parse for Block {
             .is_some_and(|token| token.kind() != TokenKind::RBrace)
         {
             match Statement::parse(parser) {
-                Ok(statement) => statements.push(statement.into_statement_unchecked()),
+                Ok(statement) => statements.push(statement),
                 Err(_) => (), // TODO: The book doesn't handle errors here, so I'll wait.
             }
 
@@ -48,8 +47,7 @@ impl Parse for Block {
         // result in a nice syntax error.
         // _ = parser.expect_token_with_kind(TokenKind::RBrace)?;
 
-        let statement = Self::new(token, statements);
-        Ok(Node::Statement(statement.into()))
+        Ok(Self::new(token, statements))
     }
 }
 

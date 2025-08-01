@@ -8,7 +8,7 @@ use crate::parser::{ParseInfix, Parser, ParserError};
 use crate::precedence::{PRECEDENCES, Precedence};
 use crate::token::{Token, TokenKind};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Infix {
     token: Token,
     left: Box<Expression>,
@@ -65,7 +65,7 @@ impl Evaluate for Infix {
         let operator = self.token.kind();
 
         if mem::discriminant(&left) != mem::discriminant(&right) {
-            let message = format!("type mismatch: {left:?} {operator:?} {right:?}");
+            let message = format!("type mismatch: {left:?} and {right:?}");
             return Error::new(message).into();
         }
 

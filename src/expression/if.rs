@@ -1,4 +1,3 @@
-use crate::ast::Node;
 use crate::environment::Environment;
 use crate::evaluator::Evaluate;
 use crate::expression::Expression;
@@ -8,7 +7,7 @@ use crate::precedence::Precedence;
 use crate::statement::{Block, Statement};
 use crate::token::{Token, TokenKind};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct If {
     token: Token,
     condition: Box<Expression>,
@@ -50,13 +49,7 @@ impl ParsePrefix for If {
         _ = parser.expect_token_with_kind(TokenKind::LParenthesis)?;
         let condition = Box::new(Expression::parse(parser, Precedence::Lowest)?);
         _ = parser.expect_token_with_kind(TokenKind::RParenthesis)?;
-        // TODO: Factor out the parsing logic for each of the statements/expressions, and have the
-        // trait implementation just wrap the type in the expected Node/Statement type. That way we
-        // can still call `Block::parse`'s logic without having to untangle the inner value...
-        let consequence = match Block::parse(parser)? {
-            Node::Statement(Statement::Block(inner)) => inner,
-            _ => unreachable!("expected Block::parse to return a Block"),
-        };
+        let consequence = Block::parse(parser)?;
 
         let alternative = if parser
             .peek()
@@ -65,10 +58,7 @@ impl ParsePrefix for If {
             parser.advance();
             _ = parser.expect_token_with_kind(TokenKind::LBrace)?;
 
-            Some(match Block::parse(parser)? {
-                Node::Statement(Statement::Block(inner)) => inner,
-                _ => unreachable!("expected Block::parse to return a Block"),
-            })
+            Some(Block::parse(parser)?)
         } else {
             None
         };

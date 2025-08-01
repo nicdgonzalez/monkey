@@ -1,4 +1,3 @@
-use crate::ast::Node;
 use crate::environment::Environment;
 use crate::evaluator::Evaluate;
 use crate::object::{NULL, Object};
@@ -23,18 +22,14 @@ impl Program {
     pub fn errors(&self) -> &[String] {
         &self.errors
     }
-}
 
-impl Parse for Program {
-    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
+    pub fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
+        tracing::trace!("begin parsing program");
         let mut program = Self::default();
 
         while parser.token().is_some() {
             match Statement::parse(parser) {
-                Ok(node) => program.statements.push(
-                    node.into_statement()
-                        .expect("expected Statement::parse to return only statements"),
-                ),
+                Ok(statement) => program.statements.push(statement),
                 Err(err) => program.errors.push(err.to_string()),
             }
 
@@ -47,6 +42,7 @@ impl Parse for Program {
 
 impl Evaluate for Program {
     fn evaluate(&self, env: &mut Environment) -> Object {
+        tracing::trace!("begin evaluating program");
         let mut result = NULL;
 
         for statement in &self.statements {

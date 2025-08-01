@@ -1,10 +1,12 @@
-use crate::ast::Node;
+use crate::environment::Environment;
+use crate::evaluator::Evaluate;
 use crate::expression::{Expression, Identifier};
+use crate::object::{Function, Object};
 use crate::parser::{Parse, ParsePrefix, Parser, ParserError};
-use crate::statement::{Block, Statement};
+use crate::statement::Block;
 use crate::token::{Token, TokenKind};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FunctionLiteral {
     token: Token,
     parameters: Vec<Identifier>,
@@ -37,11 +39,8 @@ impl ParsePrefix for FunctionLiteral {
     fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
         let token = parser.expect_token_with_kind(TokenKind::Function)?;
         let parameters = parse_function_literal_parameters(parser)?;
-        // TODO: Refactor `Block::parse`.
-        let body = match Block::parse(parser)? {
-            Node::Statement(Statement::Block(inner)) => inner,
-            _ => unreachable!("expected Block::parse to return a Block"),
-        };
+        tracing::debug!("Parameters: {parameters:?}");
+        let body = Block::parse(parser)?;
 
         let expression = Self::new(token, parameters, body);
         Ok(expression.into())
@@ -89,4 +88,10 @@ fn parse_function_literal_parameters(
     _ = parser.expect_token_with_kind(TokenKind::RParenthesis)?;
 
     Ok(parameters)
+}
+
+impl Evaluate for FunctionLiteral {
+    fn evaluate(&self, env: &mut Environment) -> Object {
+        Function::new(self.parameters.clone(), self.body.clone(), env.clone()).into()
+    }
 }

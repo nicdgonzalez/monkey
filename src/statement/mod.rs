@@ -3,7 +3,6 @@ mod expression;
 mod r#let;
 mod r#return;
 
-use crate::ast::Node;
 use crate::environment::Environment;
 use crate::evaluator::Evaluate;
 use crate::object::Object;
@@ -15,7 +14,7 @@ pub use expression::Expression;
 pub use r#let::Let;
 pub use r#return::Return;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Statement {
     Let(Let),
     Return(Return),
@@ -24,14 +23,15 @@ pub enum Statement {
 }
 
 impl Parse for Statement {
-    fn parse(parser: &mut Parser<'_>) -> Result<Node, ParserError> {
+    fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
         assert!(parser.token().is_some(), "Statement::parse after EOF");
+        let token = parser.token().unwrap();
+        tracing::debug!("{token:?}");
 
-        match parser.token().unwrap().kind() {
-            TokenKind::Let => Let::parse(parser),
-            TokenKind::Return => Return::parse(parser),
-            // There also exists a `crate::expression::Expression`; the two are not the same.
-            _ => self::Expression::parse(parser),
+        match token.kind() {
+            TokenKind::Let => Let::parse(parser).map(Statement::from),
+            TokenKind::Return => Return::parse(parser).map(Statement::from),
+            _ => self::Expression::parse(parser).map(Statement::from),
         }
     }
 }
