@@ -10,19 +10,13 @@ use crate::token::{Token, TokenKind};
 
 #[derive(Debug, Clone)]
 pub struct Call {
-    token: Token,
     function: Box<Expression>,
-    arguments: Vec<Box<Expression>>,
+    arguments: Vec<Expression>,
 }
 
 impl Call {
-    pub const fn new(
-        token: Token,
-        function: Box<Expression>,
-        arguments: Vec<Box<Expression>>,
-    ) -> Self {
+    pub const fn new(function: Box<Expression>, arguments: Vec<Expression>) -> Self {
         Self {
-            token,
             function,
             arguments,
         }
@@ -31,47 +25,31 @@ impl Call {
 
 impl ParseInfix for Call {
     fn parse_infix(parser: &mut Parser<'_>, left: Expression) -> Result<Expression, ParserError> {
-        let token = parser.expect_token_with_kind(TokenKind::LParenthesis)?;
+        _ = parser.expect_token_with_kind(TokenKind::LParenthesis)?;
         let arguments = parse_call_arguments(parser)?;
+        _ = parser.expect_token_with_kind(TokenKind::RParenthesis)?;
 
-        let expression = Self::new(token, Box::new(left), arguments);
+        let expression = Self::new(Box::new(left), arguments);
         Ok(expression.into())
     }
 }
 
-fn parse_call_arguments(parser: &mut Parser<'_>) -> Result<Vec<Box<Expression>>, ParserError> {
+fn parse_call_arguments(parser: &mut Parser<'_>) -> Result<Vec<Expression>, ParserError> {
     let mut arguments = Vec::new();
-
-    // The token is used by `Call::parse_prefix`.
-    // _ = parser.expect_token_with_kind(TokenKind::LParenthesis)?;
 
     if parser
         .token()
         .is_some_and(|token| token.kind() == TokenKind::RParenthesis)
     {
-        parser.advance();
         return Ok(arguments);
     }
 
-    arguments.push({
-        let argument = Expression::parse(parser, Precedence::Lowest)?;
-        Box::new(argument)
-    });
+    arguments.push(Expression::parse(parser, Precedence::Lowest)?);
 
-    while parser
-        .token()
-        .is_some_and(|token| token.kind() == TokenKind::Comma)
-    {
-        assert_eq!(
-            parser.token().map(|token| token.kind()),
-            Some(TokenKind::Comma)
-        );
-        _ = parser.advance();
-
-        arguments.push(Box::new(Expression::parse(parser, Precedence::Lowest)?));
+    while let Some(TokenKind::Comma) = parser.token().map(Token::kind) {
+        _ = parser.expect_token_with_kind(TokenKind::Comma)?;
+        arguments.push(Expression::parse(parser, Precedence::Lowest)?);
     }
-
-    _ = parser.expect_token_with_kind(TokenKind::RParenthesis)?;
 
     Ok(arguments)
 }
@@ -100,11 +78,12 @@ impl Evaluate for Call {
 
         for (index, parameter) in function.parameters().iter().enumerate() {
             let key = parameter.token().literal();
-            let value = arguments.iter().nth(index).unwrap();
+            let value = arguments.get(index).unwrap();
 
-            if let Some(_) = env_extended
+            if env_extended
                 .store_mut()
                 .insert(key.to_owned(), value.to_owned())
+                .is_some()
             {
                 panic!("variable named {key:?} already exists");
             }
@@ -119,7 +98,7 @@ impl Evaluate for Call {
     }
 }
 
-fn evaluate_call_arguments(arguments: &[Box<Expression>], env: &mut Environment) -> Vec<Object> {
+fn evaluate_call_arguments(arguments: &[Expression], env: &mut Environment) -> Vec<Object> {
     let mut results = Vec::new();
 
     for argument in arguments {

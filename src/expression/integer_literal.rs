@@ -3,21 +3,16 @@ use crate::evaluator::Evaluate;
 use crate::expression::Expression;
 use crate::object::{Integer, Object};
 use crate::parser::{ParsePrefix, Parser, ParserError};
-use crate::token::{Token, TokenKind};
+use crate::token::TokenKind;
 
 #[derive(Debug, Clone)]
 pub struct IntegerLiteral {
-    token: Token,
     value: i64,
 }
 
 impl IntegerLiteral {
-    pub fn new(token: Token, value: i64) -> Self {
-        Self { token, value }
-    }
-
-    pub const fn token(&self) -> &Token {
-        &self.token
+    pub fn new(value: i64) -> Self {
+        Self { value }
     }
 
     pub const fn value(&self) -> i64 {
@@ -31,7 +26,7 @@ impl ParsePrefix for IntegerLiteral {
             .expect_token_with_kind(TokenKind::Integer)
             .map(|token| {
                 let value = token.literal().parse::<i64>().expect("expected valid i64");
-                Self::new(token, value)
+                Self::new(value)
             })
             .map(Expression::from)
     }

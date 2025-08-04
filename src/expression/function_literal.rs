@@ -8,40 +8,23 @@ use crate::token::{Token, TokenKind};
 
 #[derive(Debug, Clone)]
 pub struct FunctionLiteral {
-    token: Token,
     parameters: Vec<Identifier>,
     body: Block,
 }
 
 impl FunctionLiteral {
-    pub fn new(token: Token, parameters: Vec<Identifier>, body: Block) -> Self {
-        Self {
-            token,
-            parameters,
-            body,
-        }
-    }
-
-    pub const fn token(&self) -> &Token {
-        &self.token
-    }
-
-    pub fn parameters(&self) -> &[Identifier] {
-        &self.parameters
-    }
-
-    pub const fn body(&self) -> &Block {
-        &self.body
+    pub fn new(parameters: Vec<Identifier>, body: Block) -> Self {
+        Self { parameters, body }
     }
 }
 
 impl ParsePrefix for FunctionLiteral {
     fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
-        let token = parser.expect_token_with_kind(TokenKind::Function)?;
+        _ = parser.expect_token_with_kind(TokenKind::Function)?;
         let parameters = parse_function_literal_parameters(parser)?;
         let body = Block::parse(parser)?;
 
-        let expression = Self::new(token, parameters, body);
+        let expression = Self::new(parameters, body);
         Ok(expression.into())
     }
 }
@@ -67,16 +50,8 @@ fn parse_function_literal_parameters(
             .map(Identifier::new)?,
     );
 
-    while parser
-        .token()
-        .is_some_and(|token| token.kind() == TokenKind::Comma)
-    {
-        assert_eq!(
-            parser.token().map(|token| token.kind()),
-            Some(TokenKind::Comma)
-        );
-        _ = parser.advance();
-
+    while let Some(TokenKind::Comma) = parser.token().map(Token::kind) {
+        _ = parser.expect_token_with_kind(TokenKind::Comma)?;
         parameters.push(
             parser
                 .expect_token_with_kind(TokenKind::Identifier)

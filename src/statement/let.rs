@@ -4,36 +4,27 @@ use crate::expression::{self, Identifier};
 use crate::object::{Error, Object};
 use crate::parser::{Parse, Parser, ParserError};
 use crate::precedence::Precedence;
-use crate::token::{Token, TokenKind};
+use crate::token::TokenKind;
 
 #[derive(Debug, Clone)]
 pub struct Let {
-    token: Token,
     name: Identifier,
     value: expression::Expression,
 }
 
 impl Let {
-    pub fn new(token: Token, name: Identifier, value: expression::Expression) -> Self {
-        Self { token, name, value }
-    }
-
-    pub const fn token(&self) -> &Token {
-        &self.token
+    pub fn new(name: Identifier, value: expression::Expression) -> Self {
+        Self { name, value }
     }
 
     pub const fn name(&self) -> &Identifier {
         &self.name
     }
-
-    pub const fn value(&self) -> &expression::Expression {
-        &self.value
-    }
 }
 
 impl Parse for Let {
     fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
-        let token = parser.expect_token_with_kind(TokenKind::Let)?;
+        _ = parser.expect_token_with_kind(TokenKind::Let)?;
 
         let name = parser
             .expect_token_with_kind(TokenKind::Identifier)
@@ -43,7 +34,7 @@ impl Parse for Let {
 
         let value = expression::Expression::parse(parser, Precedence::Lowest)?;
 
-        Ok(Self::new(token, name, value))
+        Ok(Self::new(name, value))
     }
 }
 

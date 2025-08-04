@@ -13,20 +13,8 @@ impl Environment {
         Self { store, outer }
     }
 
-    pub fn store(&self) -> &HashMap<String, Object> {
-        &self.store
-    }
-
     pub fn store_mut(&mut self) -> &mut HashMap<String, Object> {
         &mut self.store
-    }
-
-    pub fn outer(&self) -> Option<&Self> {
-        self.outer.as_deref()
-    }
-
-    pub fn outer_mut(&mut self) -> Option<&mut Self> {
-        self.outer.as_deref_mut()
     }
 
     pub fn get(&self, name: &str) -> Option<&Object> {

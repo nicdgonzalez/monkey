@@ -31,7 +31,7 @@ impl ParsePrefix for Boolean {
             parser.token().map(Token::kind),
             Some(TokenKind::True) | Some(TokenKind::False)
         ));
-        let token = parser.token().take().unwrap().to_owned();
+        let token = parser.token().unwrap().to_owned();
         parser.advance();
 
         let value = token.kind() == TokenKind::True;

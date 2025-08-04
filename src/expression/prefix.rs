@@ -16,14 +16,6 @@ impl Prefix {
     pub fn new(token: Token, right: Box<Expression>) -> Self {
         Self { token, right }
     }
-
-    pub const fn token(&self) -> &Token {
-        &self.token
-    }
-
-    pub fn right(&self) -> &Expression {
-        self.right.as_ref()
-    }
 }
 
 impl ParsePrefix for Prefix {
@@ -32,7 +24,7 @@ impl ParsePrefix for Prefix {
             parser.token().map(|token| token.kind()),
             Some(TokenKind::Minus) | Some(TokenKind::Bang)
         ));
-        let token = parser.token().take().unwrap().to_owned();
+        let token = parser.token().unwrap().to_owned();
         parser.advance();
 
         let right = Box::new(Expression::parse(parser, Precedence::Prefix)?);

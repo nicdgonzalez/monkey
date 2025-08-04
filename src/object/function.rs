@@ -27,18 +27,10 @@ impl Function {
     pub const fn env(&self) -> &Environment {
         &self.env
     }
-
-    pub const fn env_mut(&mut self) -> &mut Environment {
-        &mut self.env
-    }
 }
 
 impl PartialEq for Function {
     fn eq(&self, _: &Self) -> bool {
-        false
-    }
-
-    fn ne(&self, _: &Self) -> bool {
         false
     }
 }

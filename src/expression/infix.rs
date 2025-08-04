@@ -19,23 +19,11 @@ impl Infix {
     pub fn new(token: Token, left: Box<Expression>, right: Box<Expression>) -> Self {
         Self { token, left, right }
     }
-
-    pub const fn token(&self) -> &Token {
-        &self.token
-    }
-
-    pub fn left(&self) -> &Expression {
-        self.left.as_ref()
-    }
-
-    pub fn right(&self) -> &Expression {
-        self.right.as_ref()
-    }
 }
 
 impl ParseInfix for Infix {
     fn parse_infix(parser: &mut Parser<'_>, left: Expression) -> Result<Expression, ParserError> {
-        let token = parser.token().take().unwrap().to_owned();
+        let token = parser.token().unwrap().to_owned();
         let precedence = PRECEDENCES
             .get(&token.kind())
             .unwrap_or(&Precedence::Lowest);

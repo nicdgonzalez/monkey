@@ -6,12 +6,6 @@ use crate::token::TokenKind;
 #[derive(Default)]
 pub struct Grouped;
 
-impl Grouped {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
 impl ParsePrefix for Grouped {
     fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
         _ = parser.expect_token_with_kind(TokenKind::LParenthesis)?;

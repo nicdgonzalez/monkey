@@ -68,19 +68,11 @@ impl<'a> Parser<'a> {
             peek,
         }
     }
-
-    pub fn tokens(&self) -> &Tokens<'a> {
-        &self.tokens
-    }
 }
 
 impl Parser<'_> {
     pub const fn token(&self) -> Option<&Token> {
         self.token.as_ref()
-    }
-
-    pub const fn peek(&self) -> Option<&Token> {
-        self.peek.as_ref()
     }
 
     pub fn advance(&mut self) {

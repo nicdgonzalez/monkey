@@ -11,14 +11,6 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn new(statements: Vec<Statement>, errors: Vec<String>) -> Self {
-        Self { statements, errors }
-    }
-
-    pub fn statements(&self) -> &[Statement] {
-        &self.statements
-    }
-
     pub fn errors(&self) -> &[String] {
         &self.errors
     }
@@ -35,7 +27,7 @@ impl Program {
             parser.advance();
         }
 
-        Ok(program.into())
+        Ok(program)
     }
 }
 

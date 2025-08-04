@@ -3,31 +3,22 @@ use crate::evaluator::Evaluate;
 use crate::object::{NULL, Object};
 use crate::parser::{Parse, Parser, ParserError};
 use crate::statement::Statement;
-use crate::token::{Token, TokenKind};
+use crate::token::TokenKind;
 
 #[derive(Debug, Clone)]
 pub struct Block {
-    token: Token,
     statements: Vec<Statement>,
 }
 
 impl Block {
-    pub fn new(token: Token, statements: Vec<Statement>) -> Self {
-        Self { token, statements }
-    }
-
-    pub const fn token(&self) -> &Token {
-        &self.token
-    }
-
-    pub fn statements(&self) -> &[Statement] {
-        &self.statements
+    pub fn new(statements: Vec<Statement>) -> Self {
+        Self { statements }
     }
 }
 
 impl Parse for Block {
     fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
-        let token = parser.expect_token_with_kind(TokenKind::LBrace)?;
+        _ = parser.expect_token_with_kind(TokenKind::LBrace)?;
 
         let mut statements = Vec::new();
 
@@ -47,7 +38,7 @@ impl Parse for Block {
         // result in a nice syntax error.
         _ = parser.expect_token_with_kind(TokenKind::RBrace)?;
 
-        Ok(Self::new(token, statements))
+        Ok(Self::new(statements))
     }
 }
 

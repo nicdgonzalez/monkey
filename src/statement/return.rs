@@ -3,32 +3,23 @@ use crate::evaluator::Evaluate;
 use crate::object::Object;
 use crate::parser::{Parse, Parser, ParserError};
 use crate::precedence::Precedence;
-use crate::token::{Token, TokenKind};
+use crate::token::TokenKind;
 use crate::{expression, object};
 
 #[derive(Debug, Clone)]
 pub struct Return {
-    token: Token,
     value: expression::Expression,
 }
 
 impl Return {
-    pub fn new(token: Token, value: expression::Expression) -> Self {
-        Self { token, value }
-    }
-
-    pub const fn token(&self) -> &Token {
-        &self.token
-    }
-
-    pub const fn value(&self) -> &expression::Expression {
-        &self.value
+    pub fn new(value: expression::Expression) -> Self {
+        Self { value }
     }
 }
 
 impl Parse for Return {
     fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
-        let token = parser.expect_token_with_kind(TokenKind::Return)?;
+        _ = parser.expect_token_with_kind(TokenKind::Return)?;
         let value = expression::Expression::parse(parser, Precedence::Lowest)?;
 
         if parser
@@ -38,7 +29,7 @@ impl Parse for Return {
             parser.advance();
         }
 
-        Ok(Self::new(token, value))
+        Ok(Self::new(value))
     }
 }
 

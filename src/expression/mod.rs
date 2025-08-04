@@ -42,7 +42,7 @@ impl Expression {
         let mut left = PREFIX
             .get(&token.kind())
             .map(|callback| callback(parser)) // NOTE: `callback` advances the parser.
-            .expect(&format!("missing parse_prefix fn: {:?}", token))?;
+            .unwrap_or_else(|| panic!("missing parse_prefix fn: {:?}", token))?;
 
         while parser
             .token()

@@ -4,48 +4,29 @@ use crate::expression::Expression;
 use crate::object::{NULL, Object};
 use crate::parser::{Parse, ParsePrefix, Parser, ParserError};
 use crate::precedence::Precedence;
-use crate::statement::{Block, Statement};
-use crate::token::{Token, TokenKind};
+use crate::statement::Block;
+use crate::token::TokenKind;
 
 #[derive(Debug, Clone)]
 pub struct If {
-    token: Token,
     condition: Box<Expression>,
     consequence: Block,
     alternative: Option<Block>,
 }
 
 impl If {
-    pub fn new(
-        token: Token,
-        condition: Box<Expression>,
-        consequence: Block,
-        alternative: Option<Block>,
-    ) -> Self {
+    pub fn new(condition: Box<Expression>, consequence: Block, alternative: Option<Block>) -> Self {
         Self {
-            token,
             condition,
             consequence,
             alternative,
         }
     }
-
-    pub fn condition(&self) -> &Expression {
-        self.condition.as_ref()
-    }
-
-    pub const fn consequence(&self) -> &Block {
-        &self.consequence
-    }
-
-    pub fn alternative(&self) -> Option<&Block> {
-        self.alternative.as_ref()
-    }
 }
 
 impl ParsePrefix for If {
     fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
-        let token = parser.expect_token_with_kind(TokenKind::If)?;
+        _ = parser.expect_token_with_kind(TokenKind::If)?;
         let condition = Box::new(Expression::parse(parser, Precedence::Lowest)?);
         let consequence = Block::parse(parser)?;
 
@@ -59,7 +40,7 @@ impl ParsePrefix for If {
             None
         };
 
-        let expression = Self::new(token, condition, consequence, alternative);
+        let expression = Self::new(condition, consequence, alternative);
         Ok(expression.into())
     }
 }
