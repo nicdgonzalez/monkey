@@ -39,7 +39,6 @@ impl ParsePrefix for FunctionLiteral {
     fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
         let token = parser.expect_token_with_kind(TokenKind::Function)?;
         let parameters = parse_function_literal_parameters(parser)?;
-        tracing::debug!("Parameters: {parameters:?}");
         let body = Block::parse(parser)?;
 
         let expression = Self::new(token, parameters, body);

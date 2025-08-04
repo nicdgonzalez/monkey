@@ -78,7 +78,7 @@ fn main() {
             }
         }
 
-        _ = writeln!(io::stdout(), "AST: {:#?}", program.statements());
+        // _ = writeln!(io::stdout(), "AST: {:#?}", program.statements());
 
         let value = program.evaluate(&mut env);
         _ = writeln!(io::stdout(), "{}", value);

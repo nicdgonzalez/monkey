@@ -30,12 +30,10 @@ impl Parse for Expression {
     fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
         assert_ne!(parser.token(), None);
         let token = parser.token().unwrap().to_owned();
-        tracing::debug!("{token:?}");
-
         let expression = expression::Expression::parse(parser, Precedence::Lowest)?;
 
         if parser
-            .peek()
+            .token()
             .is_some_and(|token| token.kind() == TokenKind::Semicolon)
         {
             parser.advance();

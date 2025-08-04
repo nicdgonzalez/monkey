@@ -24,7 +24,6 @@ impl Program {
     }
 
     pub fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
-        tracing::trace!("begin parsing program");
         let mut program = Self::default();
 
         while parser.token().is_some() {
@@ -42,14 +41,14 @@ impl Program {
 
 impl Evaluate for Program {
     fn evaluate(&self, env: &mut Environment) -> Object {
-        tracing::trace!("begin evaluating program");
         let mut result = NULL;
 
         for statement in &self.statements {
             result = statement.evaluate(env);
 
             match result {
-                Object::Return(_) | Object::Error(_) => return result,
+                Object::Return(inner) => return inner.value().to_owned(),
+                Object::Error(_) => return result,
                 _ => continue,
             }
         }

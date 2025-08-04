@@ -50,13 +50,13 @@ impl ParseInfix for Infix {
 
 impl Evaluate for Infix {
     fn evaluate(&self, env: &mut Environment) -> Object {
-        let left = self.left.evaluate(env);
+        let left = (*self.left).evaluate(env);
 
         if matches!(left, Object::Error(_)) {
             return left;
         }
 
-        let right = self.right.evaluate(env);
+        let right = (*self.right).evaluate(env);
 
         if matches!(right, Object::Error(_)) {
             return right;

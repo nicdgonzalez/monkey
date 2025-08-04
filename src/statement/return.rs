@@ -29,12 +29,10 @@ impl Return {
 impl Parse for Return {
     fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
         let token = parser.expect_token_with_kind(TokenKind::Return)?;
-
-        let value = expression::Expression::parse(parser, Precedence::Lowest)?.into();
-        parser.advance();
+        let value = expression::Expression::parse(parser, Precedence::Lowest)?;
 
         if parser
-            .peek()
+            .token()
             .is_some_and(|token| token.kind() == TokenKind::Semicolon)
         {
             parser.advance();

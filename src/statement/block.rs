@@ -37,15 +37,15 @@ impl Parse for Block {
         {
             match Statement::parse(parser) {
                 Ok(statement) => statements.push(statement),
-                Err(_) => (), // TODO: The book doesn't handle errors here, so I'll wait.
+                Err(err) => tracing::error!("{err}"), // TODO: The book doesn't handle errors here.
             }
 
-            parser.advance();
+            // parser.advance();
         }
 
         // TODO: Better error message would be nice. Forgetting to close the curly braces should
         // result in a nice syntax error.
-        // _ = parser.expect_token_with_kind(TokenKind::RBrace)?;
+        _ = parser.expect_token_with_kind(TokenKind::RBrace)?;
 
         Ok(Self::new(token, statements))
     }

@@ -58,9 +58,9 @@ impl fmt::Display for Object {
         match *self {
             Self::Boolean(ref inner) => inner.value().fmt(f),
             Self::Error(ref inner) => write!(f, "ERROR: {}", inner.message()),
-            Self::Function(_) => "<Function>".fmt(f),
+            Self::Function(_) => "function".fmt(f),
             Self::Integer(ref inner) => inner.value().fmt(f),
-            Self::Null(_) => "<Null>".fmt(f),
+            Self::Null(_) => "null".fmt(f),
             Self::Return(ref inner) => (*inner.value()).fmt(f),
         }
     }

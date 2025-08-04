@@ -9,7 +9,6 @@ mod integer_literal;
 mod prefix;
 
 use crate::evaluator::Evaluate;
-use crate::object::NULL;
 use crate::parser::{INFIX, PREFIX, Parser, ParserError};
 use crate::precedence::{PRECEDENCES, Precedence};
 use crate::token::TokenKind;
@@ -40,31 +39,19 @@ impl Expression {
     pub fn parse(parser: &mut Parser<'_>, precedence: Precedence) -> Result<Self, ParserError> {
         assert_ne!(parser.token(), None, "Expression::parse called after EOF");
         let token = parser.token().unwrap().to_owned();
-        tracing::debug!("{token:?}");
         let mut left = PREFIX
             .get(&token.kind())
             .map(|callback| callback(parser)) // NOTE: `callback` advances the parser.
             .expect(&format!("missing parse_prefix fn: {:?}", token))?;
 
-        let span = tracing::trace_span!("while");
         while parser
             .token()
             .is_some_and(|token| token.kind() != TokenKind::Semicolon)
         {
-            let _enter = span.enter();
-
             let token = parser.token().unwrap();
-            tracing::debug!("{token:?}");
             let peek_precedence = PRECEDENCES
                 .get(&token.kind())
                 .unwrap_or(&Precedence::Lowest);
-
-            tracing::debug!(
-                "{:?} < {:?} (breaking = {})",
-                *peek_precedence,
-                precedence,
-                *peek_precedence < precedence
-            );
 
             if *peek_precedence < precedence {
                 break;
@@ -90,7 +77,8 @@ impl Evaluate for Expression {
             Self::Infix(ref inner) => inner,
             Self::Boolean(ref inner) => inner,
             Self::If(ref inner) => inner,
-            Self::Call(_) | Self::FunctionLiteral(_) => return NULL,
+            Self::Call(ref inner) => inner,
+            Self::FunctionLiteral(ref inner) => inner,
         };
 
         (*inner).evaluate(env)

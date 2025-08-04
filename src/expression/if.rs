@@ -46,18 +46,14 @@ impl If {
 impl ParsePrefix for If {
     fn parse_prefix(parser: &mut Parser<'_>) -> Result<Expression, ParserError> {
         let token = parser.expect_token_with_kind(TokenKind::If)?;
-        _ = parser.expect_token_with_kind(TokenKind::LParenthesis)?;
         let condition = Box::new(Expression::parse(parser, Precedence::Lowest)?);
-        _ = parser.expect_token_with_kind(TokenKind::RParenthesis)?;
         let consequence = Block::parse(parser)?;
 
         let alternative = if parser
-            .peek()
+            .token()
             .is_some_and(|token| token.kind() == TokenKind::Else)
         {
-            parser.advance();
-            _ = parser.expect_token_with_kind(TokenKind::LBrace)?;
-
+            _ = parser.expect_token_with_kind(TokenKind::Else)?;
             Some(Block::parse(parser)?)
         } else {
             None
@@ -77,7 +73,7 @@ impl Evaluate for If {
         }
 
         if condition.as_boolean().value() {
-            self.condition.evaluate(env)
+            self.consequence.evaluate(env)
         } else if self.alternative.is_some() {
             self.alternative.as_ref().unwrap().evaluate(env)
         } else {

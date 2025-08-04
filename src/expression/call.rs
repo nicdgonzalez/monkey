@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::environment::Environment;
 use crate::evaluator::Evaluate;
 use crate::expression::Expression;
@@ -52,31 +54,20 @@ fn parse_call_arguments(parser: &mut Parser<'_>) -> Result<Vec<Box<Expression>>,
     }
 
     arguments.push({
-        tracing::trace!("preparing to add first argument to collection");
         let argument = Expression::parse(parser, Precedence::Lowest)?;
-        tracing::trace!("adding first call argument to collection: {argument:?}");
         Box::new(argument)
     });
 
-    // TODO: Function calls are breaking at the comma.
     while parser
         .token()
         .is_some_and(|token| token.kind() == TokenKind::Comma)
     {
-        tracing::debug!("Before: {:?}", parser.token());
         assert_eq!(
             parser.token().map(|token| token.kind()),
             Some(TokenKind::Comma)
         );
         _ = parser.advance();
-        tracing::debug!("After: {:?}", parser.token());
 
-        // I don't think this part is properly advancing.
-        //
-        // The error says "comma is missing prefix fn", which is the first statement in
-        // Expression::parse.
-        //
-        // TODO: Add `tracing` crate and a flag to enable logging.
         arguments.push(Box::new(Expression::parse(parser, Precedence::Lowest)?));
     }
 
@@ -99,9 +90,32 @@ impl Evaluate for Call {
             return arguments.into_iter().next().unwrap();
         }
 
-        // return applyFunction(function, args)
+        let function = match function {
+            Object::Function(inner) => inner,
+            _ => panic!("expected Function object"),
+        };
 
-        todo!();
+        let outer = Box::new(function.env().to_owned());
+        let mut env_extended = Environment::new(HashMap::new(), Some(outer));
+
+        for (index, parameter) in function.parameters().iter().enumerate() {
+            let key = parameter.token().literal();
+            let value = arguments.iter().nth(index).unwrap();
+
+            if let Some(_) = env_extended
+                .store_mut()
+                .insert(key.to_owned(), value.to_owned())
+            {
+                panic!("variable named {key:?} already exists");
+            }
+        }
+
+        let value = function.body().evaluate(&mut env_extended);
+
+        match value {
+            Object::Return(ref inner) => inner.value().to_owned(),
+            _ => value,
+        }
     }
 }
 
@@ -119,16 +133,4 @@ fn evaluate_call_arguments(arguments: &[Box<Expression>], env: &mut Environment)
     }
 
     results
-}
-
-fn evaluate_call_apply_function(function: &Object, arguments: &[Object]) -> Object {
-    // Convert function into the inner function object.
-
-    // Extend function environment.
-
-    // Evaluate function body.
-
-    // Unwrap the return value.
-
-    todo!()
 }

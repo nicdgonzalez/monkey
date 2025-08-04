@@ -56,13 +56,15 @@ impl Evaluate for Let {
         }
 
         let identifier = self.name().token().literal();
-        tracing::debug!("adding identifier {identifier:?} to store");
         match env.store_mut().insert(identifier.to_owned(), value.clone()) {
             Some(_) => {
                 let message = format!("variable named {identifier:?} already exists");
                 Error::new(message).into()
             }
-            None => value,
+            None => match value {
+                Object::Return(inner) => inner.value().to_owned(),
+                _ => value,
+            },
         }
     }
 }

@@ -26,7 +26,6 @@ impl Parse for Statement {
     fn parse(parser: &mut Parser<'_>) -> Result<Self, ParserError> {
         assert!(parser.token().is_some(), "Statement::parse after EOF");
         let token = parser.token().unwrap();
-        tracing::debug!("{token:?}");
 
         match token.kind() {
             TokenKind::Let => Let::parse(parser).map(Statement::from),
